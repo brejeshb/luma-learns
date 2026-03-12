@@ -1,0 +1,1508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning Language with Luma</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-cream: #fffcf5;
+        --lotus-pink: #ffb7b2;
+        --lotus-dark: #e05766;
+        --leaf-green: #b9fbc0;
+        --deep-green: #2d6a4f;
+        --sun-yellow: #ffe5a3;
+        --text-main: #2c3e50;
+        --text-light: #5d6d7e;
+        --white: #ffffff;
+        --card-radius: 24px;
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Outfit", sans-serif;
+        background-color: var(--bg-cream);
+        color: var(--text-main);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      header {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .brand-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .character-mascot {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+      }
+      .brand-text h2 {
+        font-weight: 900;
+        color: var(--deep-green);
+        font-size: 1.1rem;
+        line-height: 1.2;
+      }
+      .brand-text p {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--lotus-dark);
+      }
+      .stats-area {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .stat-pill {
+        background: white;
+        padding: 8px 14px;
+        border-radius: 50px;
+        font-weight: 800;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 2px solid white;
+        font-size: 0.82rem;
+      }
+      .stat-pill.points {
+        color: var(--lotus-dark);
+        border-color: var(--lotus-pink);
+      }
+
+      .quest-section {
+        max-width: 900px;
+        margin: 0 auto 16px;
+        padding: 0 16px;
+      }
+      .quest-banner {
+        background: linear-gradient(
+          135deg,
+          rgba(185, 251, 192, 0.95),
+          rgba(212, 252, 121, 0.95)
+        );
+        border-radius: var(--card-radius);
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--deep-green);
+        border: 3px solid white;
+        box-shadow: 0 8px 24px rgba(45, 106, 79, 0.12);
+        position: relative;
+        overflow: hidden;
+      }
+      .quest-info h3 {
+        font-size: 0.8rem;
+        font-weight: 900;
+        opacity: 0.7;
+        margin-bottom: 2px;
+      }
+      .quest-tasks {
+        font-size: 1rem;
+        font-weight: 800;
+      }
+      #confetti-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      .overlay-dim {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        display: none;
+      }
+      .custom-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background: white;
+        padding: 32px 24px;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        z-index: 2000;
+        text-align: center;
+        display: none;
+        width: 92%;
+        max-width: 420px;
+        border: 4px solid var(--lotus-pink);
+      }
+      .custom-modal.show {
+        display: block;
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      @keyframes popIn {
+        to {
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+      .modal-btn {
+        color: white;
+        border: none;
+        padding: 13px 36px;
+        border-radius: 50px;
+        font-weight: 900;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-family: "Outfit", sans-serif;
+      }
+
+      .journey-grid {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 16px 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .lesson-card {
+        background: var(--white);
+        border-radius: var(--card-radius);
+        position: relative;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+        border: 2px solid transparent;
+        transition: var(--transition);
+        overflow: hidden;
+      }
+      .lesson-card.locked {
+        opacity: 0.75;
+        filter: grayscale(0.4);
+      }
+      .lesson-card.open {
+        border-color: var(--leaf-green);
+        box-shadow: 0 12px 36px rgba(45, 106, 79, 0.13);
+      }
+      .card-main-info {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 14px;
+      }
+      .lesson-card.locked .card-main-info {
+        cursor: not-allowed;
+      }
+      .card-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .card-content h4 {
+        text-transform: uppercase;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        color: var(--lotus-dark);
+        font-weight: 900;
+        margin-bottom: 3px;
+      }
+      .card-content h2 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-content p {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-progress {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .star-rating {
+        display: flex;
+        gap: 3px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+      }
+      .star-rating .filled {
+        color: var(--sun-yellow);
+      }
+      .card-status {
+        font-size: 0.6rem;
+        font-weight: 900;
+        color: var(--text-light);
+      }
+      .btn-expand {
+        width: 40px;
+        height: 40px;
+        background: #f7fafc;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: var(--transition);
+        flex-shrink: 0;
+      }
+      .lesson-card.open .btn-expand {
+        transform: rotate(90deg);
+        background: var(--lotus-dark);
+        color: white;
+      }
+      .lock-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 252, 245, 0.88);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        font-weight: 800;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        backdrop-filter: blur(3px);
+        pointer-events: none;
+        text-align: center;
+        padding: 16px;
+      }
+
+      .phrases-drawer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fafbff;
+        border-top: 1px solid #f0f0f0;
+      }
+      .lesson-card.open .phrases-drawer {
+        max-height: 2600px;
+      }
+      .flashcard-container {
+        padding: 24px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .flashcard-scene {
+        width: 100%;
+        max-width: 360px;
+        height: 300px;
+        perspective: 1000px;
+        cursor: pointer;
+      }
+      .flashcard {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        border-radius: 20px;
+      }
+      .flashcard.is-flipped {
+        transform: rotateY(180deg);
+      }
+      .flashcard-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px 20px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+        border: 2px solid #eee;
+        background: white;
+      }
+      .flashcard-face.back {
+        transform: rotateY(180deg);
+        border-color: white;
+      }
+      .theme-pink .flashcard-face.back {
+        background: #ffe4e1;
+      }
+      .theme-green .flashcard-face.back {
+        background: #e2f9e1;
+      }
+
+      .en-p {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--text-main);
+      }
+      .tap-hint {
+        margin-top: 14px;
+        font-size: 0.72rem;
+        color: var(--lotus-dark);
+        font-weight: 800;
+      }
+
+      /* Back face language rows */
+      .lang-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 6px;
+      }
+      .lang-label {
+        font-size: 0.58rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--lotus-dark);
+        white-space: nowrap;
+      }
+      .hk-p {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: var(--deep-green);
+      }
+      .cn-p {
+        font-size: 1rem;
+        color: var(--text-main);
+        font-weight: 700;
+      }
+      .py-p {
+        font-size: 0.72rem;
+        color: var(--text-light);
+        font-style: italic;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .divider {
+        width: 60%;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.08);
+        margin: 6px 0;
+      }
+
+      .audio-btn {
+        background: white;
+        border: 2px solid currentColor;
+        border-radius: 50px;
+        padding: 4px 12px;
+        font-weight: 800;
+        font-size: 0.72rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: 0.2s;
+        font-family: "Outfit", sans-serif;
+        flex-shrink: 0;
+      }
+      .audio-btn.hk {
+        color: var(--deep-green);
+      }
+      .audio-btn.cn {
+        color: #6b5beb;
+        border-color: #c4b5fd;
+      }
+      .audio-btn:active {
+        transform: scale(0.93);
+      }
+
+      .flashcard-controls {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .nav-btn {
+        background: var(--white);
+        border: 2px solid #eee;
+        padding: 9px 22px;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: var(--transition);
+        font-family: "Outfit", sans-serif;
+      }
+      .nav-btn:hover:not(:disabled) {
+        border-color: var(--deep-green);
+        transform: translateY(-2px);
+      }
+      .nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .card-counter {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--text-light);
+      }
+      .unlock-hint {
+        font-size: 0.72rem;
+        color: var(--lotus-dark);
+        font-weight: 800;
+        margin-top: -8px;
+        opacity: 0;
+        transition: 0.3s;
+      }
+      .unlock-hint.show {
+        opacity: 1;
+      }
+
+      .quiz-gate {
+        text-align: center;
+        padding: 28px 20px;
+        background: white;
+        border-radius: 24px;
+        display: none;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+      }
+      .quiz-gate.show {
+        display: block;
+        animation: slideUp 0.4s ease;
+      }
+      .btn-challenge {
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+        font-weight: 900;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 16px;
+        font-family: "Outfit", sans-serif;
+      }
+      .theme-pink .btn-challenge {
+        background: var(--lotus-dark);
+        box-shadow: 0 6px 0 #b03e4a;
+      }
+      .theme-green .btn-challenge {
+        background: var(--deep-green);
+        box-shadow: 0 6px 0 #1b4332;
+      }
+      .quiz-section {
+        width: 100%;
+        max-width: 420px;
+        background: white;
+        padding: 24px 20px;
+        border-radius: 20px;
+        margin-top: 16px;
+        display: none;
+        text-align: center;
+      }
+      .quiz-section.show {
+        display: block;
+        animation: slideUp 0.4s ease;
+      }
+      .quiz-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 16px;
+      }
+      .quiz-option {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        padding: 13px 10px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .quiz-option.correct {
+        background: var(--leaf-green);
+        border-color: var(--deep-green);
+        color: var(--deep-green);
+      }
+      .quiz-option.wrong {
+        background: #ffb7b2;
+        border-color: var(--lotus-dark);
+        color: white;
+      }
+
+      /* Finish button — always active once quiz is revealed, retry always works */
+      .btn-finish-lesson {
+        background: var(--deep-green);
+        color: white;
+        border: none;
+        padding: 14px 36px;
+        border-radius: 50px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 24px;
+        font-family: "Outfit", sans-serif;
+        font-size: 0.95rem;
+        display: none;
+      }
+      .btn-finish-lesson.show {
+        display: inline-block;
+        animation: pulse 2s infinite;
+      }
+      .btn-finish-lesson.done {
+        animation: none;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.4);
+        }
+        70% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 12px rgba(45, 106, 79, 0);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(45, 106, 79, 0);
+        }
+      }
+
+      .dev-controls {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 1000;
+      }
+      .dev-btn {
+        background: #333;
+        color: white;
+        padding: 7px 13px;
+        border-radius: 9px;
+        font-size: 0.68rem;
+        cursor: pointer;
+        opacity: 0.85;
+        font-family: "Outfit", sans-serif;
+        border: none;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(16px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .brand-text h2 {
+          font-size: 0.95rem;
+        }
+        .quest-tasks {
+          font-size: 0.88rem;
+        }
+        .flashcard-scene {
+          height: 260px;
+        }
+        .en-p {
+          font-size: 1.2rem;
+        }
+        .hk-p {
+          font-size: 1.1rem;
+        }
+        .cn-p {
+          font-size: 0.9rem;
+        }
+        .quiz-options {
+          grid-template-columns: 1fr;
+        }
+        .card-content h2 {
+          font-size: 1.05rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="overlay-dim" id="overlayDim"></div>
+
+    <div id="consequence-alert" class="custom-modal">
+      <h1 style="font-size: 2.8rem">😢</h1>
+      <h2 style="font-weight: 900; color: var(--lotus-dark); margin-top: 10px">
+        Oh no, you missed a day!
+      </h2>
+      <p style="margin: 14px 0; font-weight: 600">
+        Luma needs you every day to keep the learning flowing.
+      </p>
+      <button
+        class="modal-btn"
+        onclick="closeModal('consequence-alert')"
+        style="background: var(--deep-green)"
+      >
+        I'll stay on track!
+      </button>
+    </div>
+
+    <div
+      id="reward-alert"
+      class="custom-modal"
+      style="border-color: var(--lotus-pink)"
+    >
+      <h1 id="reward-emoji" style="font-size: 3rem">🎉</h1>
+      <h2
+        id="reward-title"
+        style="font-weight: 900; color: var(--deep-green); margin-top: 8px"
+      >
+        Amazing Work!
+      </h2>
+      <p
+        id="reward-msg"
+        style="margin: 12px 0; font-weight: 700; font-size: 1rem"
+      ></p>
+      <div
+        style="
+          background: var(--bg-cream);
+          padding: 14px;
+          border-radius: 18px;
+          margin-bottom: 16px;
+          border: 2px dashed var(--lotus-pink);
+        "
+      >
+        <p
+          style="
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            color: var(--text-light);
+          "
+        >
+          Current Total Balance
+        </p>
+        <h3 style="font-size: 1.8rem; color: var(--lotus-dark)">
+          🪷 <span id="modal-total-points">0</span>
+        </h3>
+      </div>
+      <button
+        id="reward-close-btn"
+        class="modal-btn"
+        style="background: var(--deep-green)"
+      >
+        Claim My Flowers
+      </button>
+    </div>
+
+    <div
+      id="completion-modal"
+      class="custom-modal"
+      style="border-color: var(--leaf-green)"
+    >
+      <h1 style="font-size: 3rem">🏆</h1>
+      <h2
+        style="
+          font-weight: 900;
+          color: var(--deep-green);
+          margin-top: 8px;
+          font-size: 1.5rem;
+        "
+      >
+        Journey Completed!
+      </h2>
+      <p style="margin: 12px 0; font-weight: 700; font-size: 0.95rem">
+        Congratulations! You have mastered all 5 days of learning languages with
+        Luma 🌿
+      </p>
+      <div
+        style="
+          background: #e2f9e1;
+          padding: 16px;
+          border-radius: 16px;
+          margin-bottom: 16px;
+          border: 2px dashed var(--leaf-green);
+          text-align: left;
+        "
+      >
+        <p
+          style="font-weight: 700; color: var(--deep-green); font-size: 0.88rem"
+        >
+          All categories are now permanently unlocked, feel free to come back
+          and relearn the words if you have forgotten them :) 🌸
+        </p>
+      </div>
+      <p style="font-weight: 900; color: var(--lotus-dark); font-size: 0.95rem">
+        Move on to the next page to test your knowledge!
+      </p>
+      <button
+        class="modal-btn"
+        onclick="closeModal('completion-modal')"
+        style="background: var(--deep-green); margin-top: 18px"
+      >
+        Let's Go! 🚀
+      </button>
+    </div>
+
+    <header>
+      <div class="brand-area">
+        <img
+          src="https://iili.io/qTZL6QV.png"
+          alt="Mascot"
+          class="character-mascot"
+        />
+        <div class="brand-text">
+          <h2>Learning Language with Luma</h2>
+          <p>Jiayou!</p>
+        </div>
+      </div>
+      <div class="stats-area">
+        <div class="stat-pill">📅 Day <span id="day-counter">1</span> / 5</div>
+        <div class="stat-pill points">
+          🪷 <span id="user-points">0</span> Flowers
+        </div>
+      </div>
+    </header>
+
+    <section class="quest-section">
+      <div class="quest-banner">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="quest-info" style="position: relative; z-index: 10">
+          <h3>Today's Quest:</h3>
+          <div class="quest-tasks" id="quest-desc">Loading...</div>
+        </div>
+        <div
+          id="quest-reward-icon"
+          style="font-size: 2rem; z-index: 10; position: relative"
+        >
+          💬
+        </div>
+      </div>
+    </section>
+
+    <main class="journey-grid" id="journeyGrid"></main>
+
+    <div class="dev-controls">
+      <button class="dev-btn" onclick="simulateNextDay()">
+        Simulate Day +1
+      </button>
+      <button class="dev-btn" onclick="resetAllData()">Reset Progress</button>
+    </div>
+
+    <script>
+const lessonsData = [
+  {
+    id: 1,
+    title: "Morning Ah Ma!",
+    emoji: "💬",
+    theme: "pink",
+    desc: "Learn how to say a warm hello.",
+    points: 50,
+    questBonus: 10,
+    quiz: {
+      q: "How do you say 'How are you today?' in Hokkien?",
+      options: ["Li hó", "Li-tsuè-kīn-hó—bô?", "Zá an", "A-pek"],
+      a: 1,
+    },
+    words: [
+      {
+        en: "Hello",
+        hk: "你好 (Li hó)",
+        cn: "你好",
+        py: "nǐ hǎo",
+        audioHk: "hk_li_ho.mp3",
+        audioCn: "tailohello.wav",
+      },
+      {
+        en: "Good morning",
+        hk: "早安 (Zá an)",
+        cn: "早安",
+        py: "zǎo ān",
+        audioHk: "tailogood_morning.wav",
+        audioCn: "tailogood_morning.wav",
+      },
+      {
+        en: "Aunty / Uncle",
+        hk: "阿姨 / 阿伯 (A-yi / A-pek)",
+        cn: "阿姨 / 叔叔",
+        py: "ā yí / shū shū",
+        audioHk: "tailoaunty_uncle.wav",
+        audioCn: "tailoaunty_uncle.wav",
+      },
+      {
+        en: "How are you today?",
+        hk: "你现在好吗？(Li-tsuè-kīn-hó—bô?)",
+        cn: "今天感觉怎么样？",
+        py: "jīn tiān gǎn jué zěn me yàng",
+        audioHk: "tailohow_are_you_today.wav",
+        audioCn: "tailohow_are_you_today.wav",
+      },
+      {
+        en: "I am from (country)",
+        hk: "我是⋯⋯人 (Góa sī... kok-lâng)",
+        cn: "我是⋯⋯人",
+        py: "wǒ shì... rén",
+        audioHk: "tailoi_am_from_country.wav",
+        audioCn: "tailoi_am_from_country.wav",
+      },
+    ],
+  },
+  {
+    id: 2,
+    title: "Everything Okay?",
+    emoji: "🫂",
+    theme: "green",
+    desc: "Learn how to show empathy and care.",
+    points: 60,
+    questBonus: 15,
+    quiz: {
+      q: "What does 'Ban ban lai' mean?",
+      options: [
+        "Take medicine",
+        "Slowly, take time",
+        "Eat food",
+        "Rest now",
+      ],
+      a: 1,
+    },
+    words: [
+      {
+        en: "Do you need help?",
+        hk: "爱帮忙吗？(Ài bāng máng bô?)",
+        cn: "你需要帮忙吗？",
+        py: "nǐ xū yào bāng máng ma",
+        audioHk: "tailodo_you_need_help.wav",
+        audioCn: "tailodo_you_need_help.wav",
+      },
+      {
+        en: "Slowly, take your time",
+        hk: "慢慢来 (Ban ban lai)",
+        cn: "慢慢来",
+        py: "màn màn lái",
+        audioHk: "tailoslowly_take_your_time.wav",
+        audioCn: "tailoslowly_take_your_time.wav",
+      },
+      {
+        en: "Are you in any pain?",
+        hk: "你有佗位痛无？(Lí ū tó-uī thiàng bô?)",
+        cn: "你有哪里痛吗？",
+        py: "nǐ yǒu nǎ lǐ tòng ma",
+        audioHk: "tailoare_you_in_any_pain.wav",
+        audioCn: "tailoare_you_in_any_pain.wav",
+      },
+    ],
+  },
+  {
+    id: 3,
+    title: "Jiak Png Liao!",
+    emoji: "🍽️",
+    theme: "pink",
+    desc: "Common phrases for mealtimes.",
+    points: 80,
+    questBonus: 20,
+    quiz: {
+      q: "How do you say 'Drink water'?",
+      options: ["Jiak png lo", "Ho jiak bo?", "Lim zui", "Jiak yok lo"],
+      a: 2,
+    },
+    words: [
+      {
+        en: "Time to eat",
+        hk: "食饭咯 (Jiak png lo)",
+        cn: "吃饭了",
+        py: "chī fàn le",
+        audioHk: "tailotime_to_eat.wav",
+        audioCn: "tailotime_to_eat.wav",
+      },
+      {
+        en: "Is it delicious?",
+        hk: "好食吗？(Ho jiak bo?)",
+        cn: "好吃吗？",
+        py: "hǎo chī ma",
+        audioHk: "tailois_it_delicious.wav",
+        audioCn: "tailois_it_delicious.wav",
+      },
+      {
+        en: "Drink some water",
+        hk: "喝水 (Lim zui)",
+        cn: "喝点水",
+        py: "hē diǎn shuǐ",
+        audioHk: "tailodrink_some_water.wav",
+        audioCn: "tailodrink_some_water.wav",
+      },
+    ],
+  },
+  {
+    id: 4,
+    title: "Medicine Time",
+    emoji: "💊",
+    theme: "green",
+    desc: "Assisting with daily medication.",
+    points: 90,
+    questBonus: 25,
+    quiz: {
+      q: "What is 'Jiak yok lo'?",
+      options: [
+        "Eat medicine",
+        "Open mouth",
+        "Walk outside",
+        "Good night",
+      ],
+      a: 0,
+    },
+    words: [
+      {
+        en: "Time for medicine",
+        hk: "食药咯 (Jiak yok lo)",
+        cn: "吃药时间",
+        py: "chī yào shí jiān",
+        audioHk: "tailotime_for_medicine.wav",
+        audioCn: "tailotime_for_medicine.wav",
+      },
+      {
+        en: "Swallow slowly",
+        hk: "慢慢吞 (Ban ban thun)",
+        cn: "慢慢吞",
+        py: "màn màn tūn",
+        audioHk: "tailoswallow_slowly.wav",
+        audioCn: "tailoswallow_slowly.wav",
+      },
+      {
+        en: "Open your mouth",
+        hk: "哈嘴 (Hah chui)",
+        cn: "张开嘴",
+        py: "zhāng kāi zuǐ",
+        audioHk: "tailoopen_your_mouth.wav",
+        audioCn: "tailoopen_your_mouth.wav",
+      },
+    ],
+  },
+  {
+    id: 5,
+    title: "Sleep Well",
+    emoji: "💤",
+    theme: "pink",
+    desc: "Phrases for a restful evening.",
+    points: 100,
+    questBonus: 50,
+    quiz: {
+      q: "How do you say 'Time to rest'?",
+      options: ["Hioh khun lo", "Ho khun", "Jiak png lo", "Zá an"],
+      a: 0,
+    },
+    words: [
+      {
+        en: "Time to rest",
+        hk: "休息咯 (Hioh khun lo)",
+        cn: "休息时间",
+        py: "xiū xi shí jiān",
+        audioHk: "tailotime_to_rest.wav",
+        audioCn: "tailotime_to_rest.wav",
+      },
+      {
+        en: "Sleep well",
+        hk: "好困 (Ho khun)",
+        cn: "好梦",
+        py: "hǎo mèng",
+        audioHk: "tailosleep_well.wav",
+        audioCn: "tailosleep_well.wav",
+      },
+      {
+        en: "Let's walk outside",
+        hk: "去外面行行 (Khì guā-bīn kiânn-kiânn)",
+        cn: "去外面走走",
+        py: "qù wài miàn zǒu zǒu",
+        audioHk: "tailolets_walk_outside.wav",
+        audioCn: "tailolets_walk_outside.wav",
+      },
+    ],
+  },
+];
+
+      let userPoints = 0;
+      let categoriesCompleted = 0;
+      let lastCompletionDate = "";
+      let questCompletedToday = false;
+      let devDayOffset = 0;
+      let completedThisSession = new Set();
+
+      let currentCardIndex = {};
+      let seenWords = {};
+      let hasFlippedCurrent = {};
+      let quizAnswered = {}; // tracks if quiz was answered this open session (not blocking finish)
+
+      const canvas = document.getElementById("confetti-canvas");
+      const ctx = canvas.getContext("2d");
+      let confettiParticles = [];
+      const confettiColors = [
+        "#FFB7B2",
+        "#B9FBC0",
+        "#CFE9FF",
+        "#FFE5A3",
+        "#E05766",
+      ];
+
+      function initConfetti() {
+        if (!canvas.parentElement) return;
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+      }
+      function triggerWinAnimation() {
+        confettiParticles = [];
+        for (let i = 0; i < 60; i++) {
+          confettiParticles.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            size: Math.random() * 8 + 4,
+            color:
+              confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            speedX: Math.random() * 4 - 2,
+            speedY: -(Math.random() * 8 + 4),
+            rotation: Math.random() * 360,
+            rotSpeed: Math.random() * 10 - 5,
+          });
+        }
+        requestAnimationFrame(animateConfetti);
+      }
+      function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        confettiParticles.forEach((p) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.speedY += 0.15;
+          p.rotation += p.rotSpeed;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+          if (p.y < canvas.height + 50) alive = true;
+        });
+        if (alive) requestAnimationFrame(animateConfetti);
+      }
+
+      function getSimulatedToday() {
+        const d = new Date();
+        d.setDate(d.getDate() + devDayOffset);
+        return d.toDateString();
+      }
+      function simulateNextDay() {
+        devDayOffset++;
+        questCompletedToday = false;
+        const sim = getSimulatedToday();
+        console.log(
+          `[DEV] offset:+${devDayOffset} | simToday:${sim} | completed:${categoriesCompleted} | lastDate:${lastCompletionDate}`,
+        );
+        initApp();
+      }
+
+      function playAudio(file) {
+        const a = new Audio(file);
+        a.play().catch(() => console.log("[Audio] Could not play:", file));
+      }
+
+      function initApp() {
+        userPoints = parseInt(localStorage.getItem("luma_points")) || 0;
+        categoriesCompleted =
+          parseInt(localStorage.getItem("luma_completed_count")) || 0;
+        lastCompletionDate =
+          localStorage.getItem("luma_last_completion_date") || "";
+        questCompletedToday =
+          localStorage.getItem("luma_quest_done_today") === "true";
+
+        const todayStr = getSimulatedToday();
+        if (localStorage.getItem("luma_last_active_day") !== todayStr) {
+          questCompletedToday = false;
+          completedThisSession.clear();
+          localStorage.setItem("luma_quest_done_today", "false");
+          localStorage.setItem("luma_last_active_day", todayStr);
+        }
+
+        checkConsequences();
+        initConfetti();
+        renderCards();
+        updateHeader();
+        updateQuestUI();
+      }
+
+      function renderCards() {
+        const grid = document.getElementById("journeyGrid");
+        grid.innerHTML = "";
+        const todayStr = getSimulatedToday();
+        const finishedOneToday = lastCompletionDate === todayStr;
+
+        lessonsData.forEach((lesson, index) => {
+          currentCardIndex[lesson.id] = 0;
+          seenWords[lesson.id] = new Set();
+          hasFlippedCurrent[lesson.id] = false;
+          quizAnswered[lesson.id] = 0;
+
+          const isCompleted = index < categoriesCompleted;
+          const isNextInLine = index === categoriesCompleted;
+          const isLocked =
+            index > categoriesCompleted || (isNextInLine && finishedOneToday);
+
+          console.log(
+            `[DEV] Card ${lesson.id} — isCompleted:${isCompleted} isNextInLine:${isNextInLine} finishedOneToday:${finishedOneToday} isLocked:${isLocked}`,
+          );
+
+          const w0 = lesson.words[0];
+          grid.innerHTML += `
+        <div class="lesson-card ${isLocked ? "locked" : ""}" id="card-${lesson.id}">
+            ${isLocked ? `<div class="lock-overlay">🔒 ${isNextInLine && finishedOneToday ? "Come back tomorrow for Day " + (index + 1) : "Complete Day " + index + " first"}</div>` : ""}
+            <div class="card-main-info" onclick="${isLocked ? "" : "toggleLesson(" + lesson.id + ")"}">
+                <div class="card-content">
+                    <h4>Day ${index + 1}</h4>
+                    <h2>${lesson.title}</h2>
+                    <p>${lesson.desc}</p>
+                </div>
+                <div class="card-progress">
+                    <div class="star-rating" id="stars-${lesson.id}">
+                        ${lesson.words.map((_, i) => `<span id="star-${lesson.id}-${i}" class="${isCompleted ? "filled" : ""}">★</span>`).join("")}
+                    </div>
+                    <span class="card-status">${isCompleted ? "COMPLETED" : "AVAILABLE"}</span>
+                </div>
+                <div class="btn-expand">${isLocked ? "🔒" : "→"}</div>
+            </div>
+            <div class="phrases-drawer">
+                <div class="flashcard-container theme-${lesson.theme}" id="fc-container-${lesson.id}">
+                    <div class="flashcard-scene" onclick="flipCard(${lesson.id})">
+                        <div class="flashcard" id="flashcard-${lesson.id}">
+                            <div class="flashcard-face front">
+                                <span class="en-p" id="en-${lesson.id}">${w0.en}</span>
+                                <p class="tap-hint">TAP TO FLIP</p>
+                            </div>
+                            <div class="flashcard-face back">
+                                <div class="lang-row">
+                                    <div>
+                                        <div class="lang-label">Hokkien</div>
+                                        <span class="hk-p" id="hk-${lesson.id}">${w0.hk}</span>
+                                    </div>
+                                    <button class="audio-btn hk" onclick="event.stopPropagation();playAudio('${w0.audioHk}')">🔊</button>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="lang-row">
+                                    <div>
+                                        <div class="lang-label">Mandarin</div>
+                                        <span class="cn-p" id="cn-${lesson.id}">${w0.cn}</span>
+                                        <div class="py-p" id="py-${lesson.id}">${w0.py}</div>
+                                    </div>
+                                    <button class="audio-btn cn" onclick="event.stopPropagation();playAudio('${w0.audioCn}')">🔊</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="hint-${lesson.id}" class="unlock-hint">Flip card to unlock next!</div>
+                    <div class="flashcard-controls">
+                        <button class="nav-btn" id="prev-${lesson.id}" onclick="changeCard(${lesson.id},-1)" disabled>Prev</button>
+                        <span class="card-counter" id="counter-${lesson.id}">1 / ${lesson.words.length}</span>
+                        <button class="nav-btn" id="next-${lesson.id}" onclick="changeCard(${lesson.id},1)" disabled>Next</button>
+                    </div>
+
+                    <div class="quiz-gate" id="quiz-gate-${lesson.id}">
+                        <h2 style="font-size:1.2rem;">Ready for the Quest?</h2>
+                        <p style="font-size:0.88rem;margin-top:6px;">Finish your training with a quick challenge!</p>
+                        <button class="btn-challenge" onclick="startQuiz(${lesson.id})">Start Daily Quest</button>
+                    </div>
+                    <div class="quiz-section" id="quiz-${lesson.id}">
+                        <h3 style="color:var(--lotus-dark);margin-bottom:5px;font-size:1rem;">🔥 Daily Challenge!</h3>
+                        <p style="font-weight:800;font-size:0.9rem;">${lesson.quiz.q}</p>
+                        <div class="quiz-options">
+                            ${lesson.quiz.options.map((opt, i) => `<div class="quiz-option" id="opt-${lesson.id}-${i}" onclick="selectOption(${lesson.id},${i})">${opt}</div>`).join("")}
+                        </div>
+                    </div>
+
+                    <button class="btn-finish-lesson" id="finish-${lesson.id}" onclick="handleCompletion(${lesson.id},${lesson.points},${lesson.questBonus})">
+                        Complete Day ${index + 1}
+                    </button>
+                </div>
+            </div>
+        </div>`;
+        });
+      }
+
+      function toggleLesson(id) {
+        const card = document.getElementById(`card-${id}`);
+        const wasOpen = card.classList.contains("open");
+        document
+          .querySelectorAll(".lesson-card")
+          .forEach((c) => c.classList.remove("open"));
+        if (!wasOpen) card.classList.add("open");
+        updateControls(id);
+      }
+
+      function flipCard(id) {
+        const el = document.getElementById(`flashcard-${id}`);
+        if (!el) return;
+        el.classList.toggle("is-flipped");
+        if (el.classList.contains("is-flipped")) {
+          hasFlippedCurrent[id] = true;
+          seenWords[id].add(currentCardIndex[id]);
+          updateStars(id);
+          updateControls(id);
+          checkAllFlipped(id);
+        }
+      }
+
+      function changeCard(lessonId, dir) {
+        const el = document.getElementById(`flashcard-${lessonId}`);
+        hasFlippedCurrent[lessonId] = false;
+        if (el.classList.contains("is-flipped")) {
+          el.classList.remove("is-flipped");
+          setTimeout(() => _doChangeCard(lessonId, dir), 300);
+        } else {
+          _doChangeCard(lessonId, dir);
+        }
+      }
+
+      function _doChangeCard(lessonId, dir) {
+        const lesson = lessonsData.find((l) => l.id === lessonId);
+        currentCardIndex[lessonId] += dir;
+        const w = lesson.words[currentCardIndex[lessonId]];
+        document.getElementById(`en-${lessonId}`).innerText = w.en;
+        document.getElementById(`cn-${lessonId}`).innerText = w.cn;
+        document.getElementById(`hk-${lessonId}`).innerText = w.hk;
+        document.getElementById(`py-${lessonId}`).innerText = w.py;
+        document.getElementById(`counter-${lessonId}`).innerText =
+          `${currentCardIndex[lessonId] + 1} / ${lesson.words.length}`;
+        // Update audio buttons inline
+        const back = document.querySelector(
+          `#flashcard-${lessonId} .flashcard-face.back`,
+        );
+        const btns = back.querySelectorAll(".audio-btn");
+        btns[0].onclick = (e) => {
+          e.stopPropagation();
+          playAudio(w.audioHk);
+        };
+        btns[1].onclick = (e) => {
+          e.stopPropagation();
+          playAudio(w.audioCn);
+        };
+        updateControls(lessonId);
+        checkAllFlipped(lessonId);
+      }
+
+      function updateControls(lessonId) {
+        const lesson = lessonsData.find((l) => l.id === lessonId);
+        const prev = document.getElementById(`prev-${lessonId}`);
+        const next = document.getElementById(`next-${lessonId}`);
+        const hint = document.getElementById(`hint-${lessonId}`);
+        if (!prev || !next) return;
+        prev.disabled = currentCardIndex[lessonId] === 0;
+        const isLast = currentCardIndex[lessonId] === lesson.words.length - 1;
+        next.disabled = isLast || !hasFlippedCurrent[lessonId];
+        if (hint)
+          hint.classList.toggle(
+            "show",
+            !isLast && !hasFlippedCurrent[lessonId],
+          );
+      }
+
+      function checkAllFlipped(lessonId) {
+        const lesson = lessonsData.find((l) => l.id === lessonId);
+        const isLast = currentCardIndex[lessonId] === lesson.words.length - 1;
+        if (
+          seenWords[lessonId].size === lesson.words.length &&
+          isLast &&
+          hasFlippedCurrent[lessonId]
+        ) {
+          document
+            .getElementById(`quiz-gate-${lessonId}`)
+            .classList.add("show");
+        }
+      }
+
+      function startQuiz(lessonId) {
+        document
+          .getElementById(`quiz-gate-${lessonId}`)
+          .classList.remove("show");
+        document.getElementById(`quiz-${lessonId}`).classList.add("show");
+        // Always show finish button — user should never be trapped
+        const finBtn = document.getElementById(`finish-${lessonId}`);
+        finBtn.classList.add("show");
+        finBtn.classList.remove("done");
+      }
+
+      function selectOption(lessonId, index) {
+        if (quizAnswered[lessonId] !== 0) return; // already answered, don't re-highlight
+        const lesson = lessonsData.find((l) => l.id === lessonId);
+        const isCorrect = index === lesson.quiz.a;
+        document
+          .querySelectorAll(`#quiz-${lessonId} .quiz-option`)
+          [index].classList.add(isCorrect ? "correct" : "wrong");
+        if (!isCorrect)
+          document
+            .querySelectorAll(`#quiz-${lessonId} .quiz-option`)
+            [lesson.quiz.a].classList.add("correct");
+        quizAnswered[lessonId] = isCorrect ? 1 : 2;
+      }
+
+      function handleCompletion(id, points, bonus) {
+        if (completedThisSession.has(id)) return;
+
+        const lesson = lessonsData.find((l) => l.id === id);
+        const isCorrect = quizAnswered[id] === 1;
+        const earned = points + (isCorrect ? bonus : 0);
+        const newTotal = userPoints + earned;
+
+        document.getElementById("reward-emoji").innerText = isCorrect
+          ? lesson.emoji
+          : "😊";
+        document.getElementById("reward-title").innerText = isCorrect
+          ? "Amazing Work!"
+          : "Good Effort!";
+        document.getElementById("reward-msg").innerText = isCorrect
+          ? `You got it right! +${points} Flowers + ${bonus} bonus Flowers earned!`
+          : `You earned ${points} Flowers for completing the lesson. Try the quiz again next time!`;
+        document.getElementById("modal-total-points").innerText = newTotal;
+        document.getElementById("overlayDim").style.display = "block";
+        document.getElementById("reward-alert").classList.add("show");
+
+        document.getElementById("reward-close-btn").onclick = () => {
+          closeModal("reward-alert");
+          completeLesson(id, points, isCorrect ? bonus : 0);
+        };
+      }
+
+      function completeLesson(id, points, bonus) {
+        completedThisSession.add(id);
+        // Dim the finish button so it's clear it's been used
+        const finBtn = document.getElementById(`finish-${id}`);
+        if (finBtn) {
+          finBtn.classList.remove("show");
+          finBtn.classList.add("done");
+          finBtn.classList.add("show");
+        }
+
+        userPoints += points + bonus;
+        if (bonus > 0) {
+          questCompletedToday = true;
+          localStorage.setItem("luma_quest_done_today", "true");
+        }
+        categoriesCompleted++;
+        const todayStr = getSimulatedToday();
+        lastCompletionDate = todayStr;
+        localStorage.setItem("luma_points", userPoints);
+        localStorage.setItem("luma_completed_count", categoriesCompleted);
+        localStorage.setItem("luma_last_completion_date", lastCompletionDate);
+
+        triggerWinAnimation();
+
+        if (categoriesCompleted === 5) {
+          setTimeout(() => {
+            document.getElementById("overlayDim").style.display = "block";
+            document.getElementById("completion-modal").classList.add("show");
+          }, 800);
+        } else {
+          setTimeout(initApp, 600);
+        }
+      }
+
+      function updateQuestUI() {
+        const allDone = categoriesCompleted === 5;
+        const questDesc = document.getElementById("quest-desc");
+        if (allDone) {
+          questDesc.innerText = "🏆 All Quests Mastered!";
+          document.getElementById("quest-reward-icon").innerText = "🏆";
+          return;
+        }
+
+        const todayStr = getSimulatedToday();
+        const finishedOneToday = lastCompletionDate === todayStr;
+
+        if (finishedOneToday) {
+          // Show the lesson that was just completed today — quest is done for today
+          const justDoneLesson = lessonsData[categoriesCompleted - 1];
+          questDesc.innerText = `✅ ${justDoneLesson.title} & Daily Quiz`;
+          document.getElementById("quest-reward-icon").innerText = "🏆";
+        } else {
+          // Show the next lesson to complete
+          const lesson = lessonsData[categoriesCompleted];
+          questDesc.innerText = `${lesson.title} & Daily Quiz`;
+          document.getElementById("quest-reward-icon").innerText = lesson.emoji;
+        }
+      }
+
+      function updateHeader() {
+        document.getElementById("user-points").innerText = userPoints;
+        document.getElementById("day-counter").innerText = Math.min(
+          categoriesCompleted + 1,
+          5,
+        );
+      }
+
+      function updateStars(lessonId) {
+        seenWords[lessonId].forEach((i) => {
+          const star = document.getElementById(`star-${lessonId}-${i}`);
+          if (star) star.classList.add("filled");
+        });
+      }
+
+      function checkConsequences() {
+        if (!lastCompletionDate) return;
+        const diff = Math.floor(
+          (new Date() - new Date(lastCompletionDate)) / 86400000,
+        );
+        const key = "luma_last_penalty_date";
+        if (
+          diff > 1 &&
+          localStorage.getItem(key) !== new Date().toDateString()
+        ) {
+          userPoints = Math.max(0, userPoints - 10);
+          localStorage.setItem("luma_points", userPoints);
+          localStorage.setItem(key, new Date().toDateString());
+          document.getElementById("overlayDim").style.display = "block";
+          document.getElementById("consequence-alert").classList.add("show");
+        }
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("show");
+        document.getElementById("overlayDim").style.display = "none";
+        if (id === "completion-modal") initApp();
+      }
+
+      function resetAllData() {
+        localStorage.clear();
+        devDayOffset = 0;
+        location.reload();
+      }
+
+      window.onload = () => {
+        initApp();
+        window.onresize = initConfetti;
+      };
+    </script>
+  </body>
+</html>
