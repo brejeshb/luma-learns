@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Culture Learning Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-image: url('https://iili.io/qTpF3jR.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #431407;
+            min-height: 100vh;
+        }
+        
+        .chinese-text {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        .option-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .option-card:hover:not(.locked) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #FDBA74;
+        }
+
+        .option-card.selected {
+            border-color: #F97316;
+            background-color: #FFEDD5;
+        }
+
+        .option-card.correct-selected {
+            border-color: #22C55E;
+            background-color: #DCFCE7;
+        }
+
+        .option-card.wrong-selected {
+            border-color: #EF4444;
+            background-color: #FEE2E2;
+            opacity: 0.8;
+        }
+
+        .option-card.missed-correct {
+            border-color: #22C55E;
+            border-style: dashed;
+            background-color: #F0FDF4;
+        }
+
+        .locked {
+            cursor: default;
+            pointer-events: none;
+        }
+        
+        .progress-fill {
+            transition: width 0.5s ease-out;
+        }
+
+        .theme-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: background-color 0.5s ease;
+            pointer-events: none;
+        }
+        .theme-start { background-color: rgba(255, 247, 237, 0.2); }
+        .theme-festivals { background-color: rgba(254, 242, 242, 0.4); }
+        .theme-food { background-color: rgba(255, 251, 235, 0.4); }
+        .theme-heritage { background-color: rgba(245, 245, 244, 0.4); }
+
+        .theme-bg-icon {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            font-size: 160px;
+            opacity: 0.04;
+            z-index: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body id="game-body" class="flex flex-col items-center py-10 px-4 sm:px-8">
+    <div id="theme-layer" class="theme-overlay theme-start"></div>
+
+    <!-- Header & Progress -->
+    <header id="game-header" class="w-full max-w-4xl hidden mb-6 flex-col">
+        <div class="flex justify-between items-end mb-2">
+            <div>
+                <h2 id="stage-title" class="text-2xl font-bold text-orange-600">Stage 1</h2>
+                <p id="question-counter" class="text-gray-600 font-semibold">Question 1 of 5</p>
+            </div>
+            <div class="text-right flex flex-col items-end gap-1">
+                <span id="score-display" class="bg-orange-100 text-orange-800 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">Flowers: 🪷 0</span>
+                <span id="overall-percentage" class="text-xs font-bold text-orange-500 bg-white/50 px-2 py-0.5 rounded">0% Complete</span>
+            </div>
+        </div>
+        <div class="relative w-full bg-orange-200 rounded-full h-5 overflow-hidden shadow-inner">
+            <div id="progress-bar" class="bg-orange-500 h-full rounded-full progress-fill flex items-center justify-center" style="width: 0%">
+                <span id="inner-percentage" class="text-[10px] font-bold text-white uppercase tracking-widest leading-none"></span>
+            </div>
+        </div>
+    </header>
+    <main class="w-full max-w-4xl bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden relative">
+        <div id="theme-watermark" class="theme-bg-icon hidden"></div>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="p-8 sm:p-12 text-center flex flex-col items-center relative z-10">
+            <div class="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mb-6 text-6xl shadow-inner">
+                🇸🇬
+            </div>
+            <h1 class="text-4xl font-extrabold text-orange-600 mb-6 tracking-tight">Singapore Culture Explorer</h1>
+            <p class="text-lg text-gray-600 mb-8 max-w-xl">
+                Welcome! Let's explore everyday life, food, and festivals in Singapore. 
+                Look at the pictures and choose the right answers. Don't worry if you make mistakes, we are here to learn!
+            </p>
+            <button onclick="startGame()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xl py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105">
+                Start Playing
+            </button>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="question-screen" class="hidden flex flex-col h-full relative z-10">
+            <div class="p-6 sm:p-10 flex-grow">
+                <div class="flex flex-col sm:flex-row sm:justify-between items-start gap-4 mb-6">
+                    <h2 id="question-text" class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 leading-tight">Question goes here?</h2>
+                    <span id="selection-badge" class="shrink-0 bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                        Select 1
+                    </span>
+                </div>
+
+                <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+                </div>
+            </div>
+
+            <div class="bg-gray-50 border-t border-gray-100 p-6 sm:p-8">
+                <button id="submit-btn" onclick="checkAnswer()" class="w-full sm:w-auto mx-auto block bg-orange-500 hover:bg-orange-600 text-white font-bold text-xl py-3 px-8 sm:px-12 rounded-full shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Check Answer
+                </button>
+
+                <div id="feedback-panel" class="hidden rounded-2xl p-6 mt-2 relative z-20">
+                    <div class="flex items-center mb-3">
+                        <div id="feedback-icon" class="text-3xl mr-3"></div>
+                        <h3 id="feedback-title" class="text-2xl font-bold"></h3>
+                    </div>
+                    <p id="feedback-explanation" class="text-lg text-gray-700 mb-6 leading-relaxed bg-white/60 p-4 rounded-xl"></p>
+                    
+                    <button onclick="nextQuestion()" class="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white font-bold text-lg py-3 px-10 rounded-full shadow transition flex items-center justify-center">
+                        Next Question <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- End Screen -->
+        <div id="end-screen" class="hidden p-8 sm:p-12 text-center flex flex-col items-center relative z-10">
+            <div class="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-6 text-6xl shadow-inner">
+                🎉
+            </div>
+            <h1 class="text-4xl font-extrabold text-green-600 mb-4">Great Job!</h1>
+            <p class="text-xl text-gray-700 mb-4">You have completed all the stages.</p>
+            <div class="bg-pink-50 border-2 border-pink-200 rounded-2xl p-6 mb-8 w-full max-w-sm">
+                <p class="text-lg text-gray-600 mb-1">Total Earned</p>
+                <p id="final-score" class="text-3xl font-bold text-pink-500">Flowers: 🪷 0</p>
+            </div>
+            <button onclick="resetGame()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xl py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105">
+                Play Again
+            </button>
+        </div>
+    </main>
+    <script>
+        const gameData = [
+            {
+                title: "Stage 1: Festivals & Celebrations",
+                themeClass: "theme-festivals",
+                watermark: "🏮",
+                questions: [
+                    {
+                        type: "multi",
+                        questionEn: "What will you usually see during Chinese New Year? (Select all that apply)",
+                        questionZh: "农历新年期间通常会看到什么？(请选择所有适用的)",
+                        options: [
+                            { id: "opt1", en: "Red Packet", zh: "红包 (hóng bāo)", img: "https://www.hlb.com.my/content/dam/hlb/my/images/Personal/blog/what-to-do-when-you-get-your-first-bonus-or-angpao-in-Malaysia/what-to-do-first-bonus-or-angpao-in-Malaysia-content.png" },
+                            { id: "opt2", en: "Lion Dance", zh: "舞狮 (wǔ shī)", img: "https://cdn.i-scmp.com/sites/default/files/images/methode/2019/02/05/8d7cb59c-2886-11e9-8864-9e8ab15a22ca_image_hires_222452.JPG" },
+                            { id: "opt3", en: "Ketupat", zh: "马来粽 (mǎ lái zòng)", img: "https://singabites.com/wp-content/uploads/2018/06/ketaput.jpg" },
+                            { id: "opt4", en: "Oranges", zh: "桔子 (jú zi)", img: "https://www.fruitsmith.com/pub/media/wysiwyg/Orange.jpg" }
+                        ],
+                        correct: ["opt1", "opt2", "opt4"],
+                        explanation: "Chinese New Year (农历新年) is a major festival in Singapore. People exchange red packets for good luck, watch lion dances, and give mandarin oranges to relatives during house visits (bai nian)."
+                    },
+                    {
+                        type: "multi",
+                        questionEn: "What is common during Hari Raya Puasa?",
+                        questionZh: "开斋节期间常见的是什么？",
+                        options: [
+                            { id: "opt1", en: "Green Packet", zh: "绿包 (lǜ bāo)", img: "https://iprint.express/media/catalog/product/cache/69fb0ceebfc362df676aec7508ef3a24/i/p/iprint_express_hari_raya_packets_1200_1200.jpg" },
+                            { id: "opt2", en: "Mooncake", zh: "月饼 (yuè bǐng)", img: "https://omnivorescookbook.com/wp-content/uploads/2025/09/250912_Traditional-Mooncake_550.jpg" },
+                            { id: "opt3", en: "Ketupat", zh: "马来粽 (mǎ lái zòng)", img: "https://singabites.com/wp-content/uploads/2018/06/ketaput.jpg" },
+                            { id: "opt4", en: "Red Lantern", zh: "红灯笼 (hóng dēng lóng)", img: "https://images.ctfassets.net/6alb7q886wpg/4TDEnyZJC5jCIydbp7imas/dbaaf257a28536cefa8c16ce2867561d/Hero_Opener_2_5_21_image_by_Henry_Co.png" }
+                        ],
+                        correct: ["opt1", "opt3"],
+                        explanation: "During Hari Raya, Muslims in Singapore visit friends and family, eat Ketupat (rice dumplings), and give Green Packets (duit raya) to children and elders."
+                    },
+                    {
+                        type: "multi",
+                        questionEn: "What do we see on Singapore National Day (9 August)?",
+                        questionZh: "新加坡国庆日（8月9日）会看到什么？",
+                        options: [
+                            { id: "opt1", en: "Singapore Flag", zh: "新加坡国旗 (xīn jiā pō guó qí)", img: "https://i0.wp.com/thekopi.co/wp-content/uploads/2019/11/sg-final.png?fit=1024%2C683&ssl=1" },
+                            { id: "opt2", en: "Snowman", zh: "雪人 (xuě rén)", img: "https://cdn.abcotvs.com/dip/images/5096048_011819-cc-accuwx-perfect-snowman-tips-vid.jpg" },
+                            { id: "opt3", en: "Fireworks", zh: "烟花 (yān huā)", img: "https://www.redapplefireworks.com/cdn/shop/articles/how_do_fireworks_work_c6687553-45b4-4a0a-a4ac-c673779e7ffe.jpg?v=1745365070&width=2048" },
+                            { id: "opt4", en: "Christmas Tree", zh: "圣诞树 (shèng dàn shù)", img: "https://www.gardentrends.co.uk/cdn/shop/files/CHR2310_CoffeeSet_Main_3_2048x.jpg?v=1721233151" }
+                        ],
+                        correct: ["opt1", "opt3"],
+                        explanation: "Singaporeans wear red and white, hang the national flag, and watch spectacular fireworks displays at the National Day Parade (NDP)."
+                    },
+                    {
+                        type: "multi",
+                        questionEn: "What is associated with Deepavali?",
+                        questionZh: "屠妖节与什么有关？",
+                        options: [
+                            { id: "opt1", en: "Oil Lamp / Diya", zh: "油灯 (yóu dēng)", img: "https://img.freepik.com/premium-photo/diwali-diya-oil-lamps-lit-deepavali-celebration-hindu-festival-lights-india_771335-15.jpg" },
+                            { id: "opt2", en: "Rangoli", zh: "彩色地画 (cǎi sè dì huà)", img: "https://www.remitly.com/blog/wp-content/uploads/2020/11/person-making-a-rangoli-768x512.jpeg" },
+                            { id: "opt3", en: "Red Packet", zh: "红包 (hóng bāo)", img: "https://www.hlb.com.my/content/dam/hlb/my/images/Personal/blog/what-to-do-when-you-get-your-first-bonus-or-angpao-in-Malaysia/what-to-do-first-bonus-or-angpao-in-Malaysia-content.png" },
+                            { id: "opt4", en: "Mooncake", zh: "月饼 (yuè bǐng)", img: "https://omnivorescookbook.com/wp-content/uploads/2025/09/250912_Traditional-Mooncake_550.jpg" }
+                        ],
+                        correct: ["opt1", "opt2"],
+                        explanation: "Deepavali (屠妖节) is the Festival of Lights. Hindu families light oil lamps (diyas) and create beautiful floor art designs called Rangoli at their doorways."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "What do people usually do on Labour Day (1 May)?",
+                        questionZh: "劳动节（5月1日）人们通常做什么？",
+                        options: [
+                            { id: "opt1", en: "Rest and Relax", zh: "休息放松 (xiū xi fàng sōng)", img: "https://img.freepik.com/free-photo/picture-stylish-handsome-young-guy-with-fuzzy-beard-voluminous-hairdo-bare-feet-keeping-eyes-closed-falling-asleep-listening-classical-music-enjoying-leisure-time-sitting-couch_343059-1841.jpg?semt=ais_rp_progressive&w=740&q=80" },
+                            { id: "opt2", en: "Go to School", zh: "去上学 (qù shàng xué)", img: "https://cms-uploads.mumsnet.com/cache/containers/images/shutterstock_1086378563.jpg/3ca6e18a7cc9b5277f601ed0c129d4a3/shutterstock_1086378563.webp" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Labour Day is a public holiday in Singapore! Workers and students get a day off to rest and relax."
+                    }
+                ]
+            },
+            {
+                title: "Stage 2: Food & Drinks",
+                themeClass: "theme-food",
+                watermark: "🍜",
+                questions: [
+                    {
+                        type: "single",
+                        questionEn: "Which of these is a traditional local coffee commonly served in a kopitiam (coffeeshop)?",
+                        questionZh: "哪一种是在传统咖啡店 (Kopitiam) 常见的本地咖啡？",
+                        options: [
+                            { id: "opt1", en: "Kopi (Coffee)", zh: "咖啡 (kā fēi)", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTH-ZIobq8RxBro_CYrwSP90Ym7NGwcOOmHTg&s" },
+                            { id: "opt2", en: "Cola", zh: "可乐 (kě lè)", img: "https://www.coca-cola.com/content/dam/onexp/sg/en/brands/coca-cola/15072024/sg-coca-cola-classic.png" },
+                            { id: "opt3", en: "Orange Juice", zh: "橙汁 (chéng zhī)", img: "https://elisetriestocook.com/wp-content/uploads/2023/10/freshly-squeezed-orange-juice-featured-image.jpg" },
+                            { id: "opt4", en: "Milkshake", zh: "奶昔 (nǎi xī)", img: "https://www.dessertfortwo.com/wp-content/uploads/2022/08/How-to-Make-a-Milkshake-11-540x720.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "In Singapore coffeeshops (Kopitiams), locals order traditional coffee (Kopi) with condensed milk."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Which of these famous local dishes features fragrant rice cooked in broth?",
+                        questionZh: "以下哪一种著名的本地菜肴是以高汤烹煮的香米饭？",
+                        options: [
+                            { id: "opt1", en: "Chicken Rice", zh: "鸡饭 (jī fàn)", img: "https://upload.wikimedia.org/wikipedia/commons/7/71/Hainanese_Chicken_Rice.jpg" },
+                            { id: "opt2", en: "Chili Crab", zh: "辣椒螃蟹 (là jiāo páng xiè)", img: "https://blog.hamiltonbeachcommercial.com/hubfs/Chilli_Crab_Jelco.jpg" },
+                            { id: "opt3", en: "Satay", zh: "沙爹 (shā diē)", img: "https://delishglobe.com/wp-content/uploads/2024/12/Satay-Grilled-Skewered-Meat.png" },
+                            { id: "opt4", en: "Hamburger", zh: "汉堡包 (hàn bǎo bāo)", img: "https://www.primaverakitchen.com/wp-content/uploads/2024/08/Hamburger-Recipe-7-500x500.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Hainanese Chicken Rice is considered one of Singapore's national dishes."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Which of these is a popular local breakfast spread with sweet coconut jam?",
+                        questionZh: "哪一个是受欢迎的本地早餐，通常涂有甜椰果酱？",
+                        options: [
+                            { id: "opt1", en: "Kaya Toast", zh: "咖椰吐司 (kā yē tǔ sī)", img: "https://www.capitaland.com/sg/malls/rafflescity/en/stores/ya-kun-kaya-toast/_jcr_content.coreimg.85.600.jpeg/content/dam/capitaland-tenants/imported/en/-/media/cma-malls/websites/raffles-city/tenants/y/yakun_560x462.jpg" },
+                            { id: "opt2", en: "Prata", zh: "印度煎饼 (yìn dù jiān bǐng)", img: "https://images.squarespace-cdn.com/content/v1/5be172e38f513032e447734b/1582783292062-BL5N1VRZ2ZIL62QOFT16/Singapore-Food-tours-Roti+Prata.jpg" },
+                            { id: "opt3", en: "Bread", zh: "面包 (miàn bāo)", img: "https://static01.nyt.com/images/2015/04/30/dining/29BIGAPPETITE/29BIGAPPETITE-superJumbo.jpg" },
+                            { id: "opt4", en: "Cereal", zh: "麦片 (mài piàn)", img: "https://images-prod.healthline.com/hlcmsresource/images/AN_images/are-breakfast-cereals-healthy-1296x728-feature.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Kaya is a sweet coconut jam. Kaya toast is traditional breakfast bread."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Which of these chocolate malt drinks is packed in an iconic green tin?",
+                        questionZh: "哪一种巧克力麦芽饮料装在标志性的绿色罐子里？",
+                        options: [
+                            { id: "opt1", en: "Milo", zh: "美禄 (měi lù)", img: "https://mynikmart.sg/cdn/shop/products/PANTMILO1P8KG-1_sq.jpg?v=1605966754" },
+                            { id: "opt2", en: "Lemon Tea", zh: "柠檬茶 (níng méng chá)", img: "https://grumpyrecipes.com/wp-content/uploads/2024/10/hong-kong-lemon-tea-recipe-feature.jpg" },
+                            { id: "opt3", en: "Milk", zh: "牛奶 (niú nǎi)", img: "https://images.immediate.co.uk/production/volatile/sites/30/2020/02/Glass-and-bottle-of-milk-fe0997a.jpg" },
+                            { id: "opt4", en: "Soya Milk", zh: "豆奶 (dòu nǎi)", img: "https://wokmeetsoven.com/storage/2025/02/Soy-milk-featured-image.webp" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Milo is very popular in Singapore and recognized by its green tin."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Which of these is a traditional local tea mixed with sweet condensed milk?",
+                        questionZh: "哪一种是混合了甜炼乳的传统本地茶？",
+                        options: [
+                            { id: "opt1", en: "Teh (Tea)", zh: "茶 (chá)", img: "https://delishglobe.com/wp-content/uploads/2025/04/Teh-Tarik-.png" },
+                            { id: "opt2", en: "Hot Chocolate", zh: "热巧克力 (rè qiǎo kè lì)", img: "https://hips.hearstapps.com/hmg-prod/images/hot-chocolate-index-675c61bc88ba1.jpg?crop=0.502xw:1.00xh;0.232xw,0&resize=1200:*" },
+                            { id: "opt3", en: "Lemonade", zh: "柠檬水 (níng méng shuǐ)", img: "https://assets.bonappetit.com/photos/62aba9d5b433b325383e9ca9/16:9/w_4944,h_2781,c_limit/0616-lemonade-recipe-lede.jpg" },
+                            { id: "opt4", en: "Orange Juice", zh: "橙汁 (chéng zhī)", img: "https://elisetriestocook.com/wp-content/uploads/2023/10/freshly-squeezed-orange-juice-featured-image.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Teh is a staple in local coffeeshops, usually mixed with condensed milk."
+                    }
+                ]
+            },
+            {
+                title: "Stage 3: Everyday Singapore Objects",
+                themeClass: "theme-heritage",
+                watermark: "📻",
+                questions: [
+                    {
+                        type: "single",
+                        questionEn: "Which cup is traditionally used for hot drinks in a kopitiam (coffeeshop)?",
+                        questionZh: "在传统咖啡店 (Kopitiam) 通常使用哪种杯子装热饮？",
+                        options: [
+                            { id: "opt1", en: "Kopitiam Cup", zh: "传统咖啡杯 (chuán tǒng kā fēi bēi)", img: "https://dreamscaper.sg/4976-tm_thickbox_default/rent-traditional-kopitiam-cup-and-saucer-set-of-3.jpg" },
+                            { id: "opt2", en: "Wine Glass", zh: "高脚杯 (gāo jiǎo bēi)", img: "https://www.robinsons.com.sg/cdn/shop/files/74569099_a8f7a678-b36e-4efc-97ba-b459282d0473_614x614.jpg?v=1771873917" },
+                            { id: "opt3", en: "Teacup", zh: "茶杯 (chá bēi)", img: "https://yiqinteahouse.com/cdn/shop/products/yixing-zisha-master-tea-cup-150ml-fair-cup-220ml-xi-shang-mei-shao-yiqin-tea-house-yiqinteahouse-com-2.png?v=1723259507&width=533" },
+                            { id: "opt4", en: "Paper Cup", zh: "纸杯 (zhǐ bēi)", img: "https://m.media-amazon.com/images/I/61FRi97CfOL._AC_UF350,350_QL80_.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "The traditional Kopitiam cup is thick and features a green floral pattern."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "What did people in the past commonly use to carry their groceries from the wet market?",
+                        questionZh: "过去人们通常用什么从湿巴刹（菜市场）装载买来的菜？",
+                        options: [
+                            { id: "opt1", en: "Market Basket", zh: "菜篮 (cài lán)", img: "https://imgservice.suning.cn/uimg1/b2c/image/6OVhMqdg2cXL_lxfQHXG4w.jpg_800w_800h_4e_80Q_is" },
+                            { id: "opt2", en: "Suitcase", zh: "行李箱 (xíng lǐ xiāng)", img: "https://global.antler.com/cdn/shop/files/Antler-01-Icon-Stripe-Large-Moorland-Pink-Angle_8c5dedc6-1227-42fd-9203-c13439c4c142.jpg?v=1716895943" },
+                            { id: "opt3", en: "Backpack", zh: "背包 (bēi bāo)", img: "https://m.media-amazon.com/images/I/31YqiqI6e9L._AC_SR290,290_.jpg" },
+                            { id: "opt4", en: "Briefcase", zh: "公文包 (g公 wén bāo)", img: "https://www.montblanc.com/dw/image/v2/BHDB_PRD/on/demandware.static/-/Sites-montblanc-master/default/dw8d1b1184/images/all-images/MB220490/q9YLO7jkR_6W_llK2ZA8wA_d2f12459.png?sw=628&q=90" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "The traditional plastic market basket was a familiar sight in wet markets."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Which towel was historically used by workers to wipe their sweat?",
+                        questionZh: "历史上，体力劳动者使用哪种毛巾来擦汗？",
+                        options: [
+                            { id: "opt1", en: "Good Morning Towel", zh: "“早安”毛巾 (zǎo ān máo jīn)", img: "https://df3k2q0k3bu2n.cloudfront.net/static/images/good-morning-towel-cleaning-cloth-pack-of-12.jpg" },
+                            { id: "opt2", en: "Bath Towel", zh: "浴巾 (yù jīn)", img: "https://www.ikea.com/sg/en/images/products/slanhoestmal-bath-towel-bright-blue-light-blue-striped__1255895_pe924768_s5.jpg?f=s" },
+                            { id: "opt3", en: "Tissue", zh: "纸巾 (zhǐ jīn)", img: "https://shopscanpap.com/cdn/shop/files/onwardstravelpack3copy.png?v=1689668359" },
+                            { id: "opt4", en: "Beach Towel", zh: "沙滩巾 (shā tān jīn)", img: "https://www.bedbathntable.com.sg/media/catalog/product/C/H/CH_S25-26_LS_Outdoor_Beach_Towels_Cillia_23427201_SI.jpg?optimize=high&fit=bounds&height=&width=" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "The 'Good Morning' towel is a thin white towel with red characters."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Before air-conditioners were common, what was traditionally used to keep cool?",
+                        questionZh: "在空调普及之前，传统上用什么来保持凉爽？",
+                        options: [
+                            { id: "opt1", en: "Rattan Fan", zh: "蒲扇 (pú shàn)", img: "https://m.media-amazon.com/images/I/71swFek5+eL._AC_UF894,1000_QL80_.jpg" },
+                            { id: "opt2", en: "Electric Fan", zh: "电风扇 (diàn fēng shàn)", img: "https://www.nnio.asia/cdn/shop/articles/bladeless-fan.png?v=1755046938&width=1100" },
+                            { id: "opt3", en: "Aircon", zh: "空调 (kōng tiáo)", img: "https://www.billyaircon.com.sg/wp-content/uploads/2020/11/Exactly-How-Does-An-Aircon-Work.png" },
+                            { id: "opt4", en: "Winter Coat", zh: "冬装 (dōng zhuāng)", img: "https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/J4P6CDCSEII6ZA6S3HNLBYR3PY.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Handmade rattan fans were once used by everyone to stay cool."
+                    },
+                    {
+                        type: "single",
+                        questionEn: "Where do residents in HDB housing usually collect their mail?",
+                        questionZh: "组屋区居民通常在哪里收信？",
+                        options: [
+                            { id: "opt1", en: "Letterbox", zh: "信箱 (xìn xiāng)", img: "https://www.prefabtech3.com.sg/img/products-letterboxes-aluminium.jpg" },
+                            { id: "opt2", en: "Dustbin", zh: "垃圾桶 (lā jī tǒng)", img: "https://storage.keepital.com/public/company/sg/s/h/sh-construction-building-materials-supplier-pte-ltd/images/product/4-wheel-plastic-mobile-garbage-bin-green-colour/15-hcs-rubbish-bin-01.jpg" },
+                            { id: "opt3", en: "Telephone Booth", zh: "电话亭 (diàn huà tíng)", img: "https://i.imgur.com/c8k2iHi.jpeg" },
+                            { id: "opt4", en: "Safe Box", zh: "保险箱 (bǎo xiǎn xiāng)", img: "https://m.media-amazon.com/images/I/71SGGiO603L._AC_UF894,1000_QL80_.jpg" }
+                        ],
+                        correct: ["opt1"],
+                        explanation: "Every block has clustered letterboxes on the ground floor."
+                    }
+                ]
+            }
+        ];
+
+        let currentStageIndex = 0;
+        let currentQuestionIndex = 0;
+        let selectedOptions = [];
+        let flowers = 0;
+        let totalQuestions = 0;
+        let answeredQuestions = 0;
+
+        gameData.forEach(stage => totalQuestions += stage.questions.length);
+        function applyTheme(stageIndex) {
+            const overlay = document.getElementById('theme-layer');
+            const watermark = document.getElementById('theme-watermark');
+            overlay.classList.remove('theme-start', 'theme-festivals', 'theme-food', 'theme-heritage');
+            
+            if (stageIndex === -1) {
+                overlay.classList.add('theme-start');
+                watermark.classList.add('hidden');
+            } else {
+                const themeData = gameData[stageIndex];
+                overlay.classList.add(themeData.themeClass);
+                watermark.innerText = themeData.watermark;
+                watermark.classList.remove('hidden');
+            }
+        }
+
+        function startGame() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-header').classList.add('flex');
+            document.getElementById('question-screen').classList.remove('hidden');
+            document.getElementById('question-screen').classList.add('flex');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedOptions = [];
+            const stage = gameData[currentStageIndex];
+            const q = stage.questions[currentQuestionIndex];
+            applyTheme(currentStageIndex);
+            
+            document.getElementById('stage-title').innerText = stage.title;
+            const stageQCount = stage.questions.length;
+            document.getElementById('question-counter').innerText = `Question ${currentQuestionIndex + 1} of ${stageQCount} (Stage)`;
+            
+            // Progress Bar Logic
+            const progressPercent = Math.round((answeredQuestions / totalQuestions) * 100);
+
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('overall-percentage').innerText = `${progressPercent}% Complete`;
+            document.getElementById('inner-percentage').innerText = progressPercent > 5 ? `${progressPercent}%` : '';
+
+
+            document.getElementById('question-text').innerText = q.questionEn;
+            
+            const badge = document.getElementById('selection-badge');
+            if (q.type === 'multi') {
+                badge.innerText = "Select Multiple";
+                badge.className = "ml-4 shrink-0 bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap";
+            } else {
+                badge.innerText = "Select 1";
+                badge.className = "ml-4 shrink-0 bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap";
+            }
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            q.options.forEach(opt => {
+                const card = document.createElement('div');
+                card.id = `card-${opt.id}`;
+                card.className = "option-card bg-white rounded-2xl shadow-sm p-3 flex flex-col items-center select-none relative";
+                card.onclick = () => toggleOption(opt.id, q.type);
+                card.innerHTML = `
+                    <div class="w-full h-32 sm:h-40 bg-white border border-gray-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
+                        <img src="${opt.img}" alt="${opt.en}" class="max-w-full max-h-full object-contain rounded">
+                    </div>
+                    <div class="text-center flex-grow flex flex-col justify-center">
+                        <span class="text-lg font-bold text-gray-800 mb-1">${opt.en}</span>
+                        <span class="text-base chinese-text text-gray-600">${opt.zh}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            document.getElementById('submit-btn').classList.remove('hidden');
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('feedback-panel').classList.add('hidden');
+        }
+
+        function toggleOption(id, type) {
+            if (type === 'single') {
+                selectedOptions = [id];
+                document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+                document.getElementById(`card-${id}`).classList.add('selected');
+            } else {
+                const index = selectedOptions.indexOf(id);
+                if (index > -1) {
+                    selectedOptions.splice(index, 1);
+                    document.getElementById(`card-${id}`).classList.remove('selected');
+                } else {
+                    selectedOptions.push(id);
+                    document.getElementById(`card-${id}`).classList.add('selected');
+                }
+            }
+            document.getElementById('submit-btn').disabled = selectedOptions.length === 0;
+        }
+        function checkAnswer() {
+            const q = gameData[currentStageIndex].questions[currentQuestionIndex];
+            const sortedSelected = [...selectedOptions].sort();
+            const sortedCorrect = [...q.correct].sort();
+            const isCorrect = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
+            if (isCorrect) flowers += 10;
+            answeredQuestions++;
+            
+            document.querySelectorAll('.option-card').forEach(card => card.classList.add('locked'));
+            q.options.forEach(opt => {
+                const card = document.getElementById(`card-${opt.id}`);
+                const isOptSelected = selectedOptions.includes(opt.id);
+                const isOptCorrect = q.correct.includes(opt.id);
+                if (isOptSelected && isOptCorrect) {
+                    card.classList.add('correct-selected');
+                    card.classList.remove('selected');
+                } else if (isOptSelected && !isOptCorrect) {
+                    card.classList.add('wrong-selected');
+                    card.classList.remove('selected');
+                } else if (!isOptSelected && isOptCorrect) {
+                    card.classList.add('missed-correct');
+                }
+            });
+            document.getElementById('score-display').innerText = `Flowers: 🪷 ${flowers}`;
+            document.getElementById('submit-btn').classList.add('hidden');
+            const feedbackPanel = document.getElementById('feedback-panel');
+            const title = document.getElementById('feedback-title');
+            const icon = document.getElementById('feedback-icon');
+            const expl = document.getElementById('feedback-explanation');
+            feedbackPanel.className = isCorrect ? "bg-green-50 border-t-4 border-green-500 rounded-b-2xl p-6 mt-4 block relative z-20" : "bg-red-50 border-t-4 border-red-500 rounded-b-2xl p-6 mt-4 block relative z-20";
+            icon.innerText = isCorrect ? "🌟" : "💡";
+            title.innerText = isCorrect ? "Correct! +10 Flowers 🪷" : "Not quite!";
+            title.className = isCorrect ? "text-2xl font-bold text-green-700" : "text-2xl font-bold text-red-700";
+            expl.innerHTML = q.explanation;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= gameData[currentStageIndex].questions.length) {
+                currentStageIndex++;
+                currentQuestionIndex = 0;
+            }
+            if (currentStageIndex >= gameData.length) endGame();
+            else loadQuestion();
+        }
+
+        function endGame() {
+            document.getElementById('progress-bar').style.width = `100%`;
+            document.getElementById('overall-percentage').innerText = `100% Complete`;
+            document.getElementById('inner-percentage').innerText = `100%`;
+            document.getElementById('game-header').classList.add('hidden');
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            applyTheme(-1);
+            document.getElementById('final-score').innerText = `Flowers: 🪷 ${flowers}`;
+
+        }
+
+        function resetGame() {
+            currentStageIndex = 0;
+            currentQuestionIndex = 0;
+            flowers = 0;
+            answeredQuestions = 0;
+            document.getElementById('score-display').innerText = `Flowers: 🪷 0`;
+            document.getElementById('end-screen').classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>
