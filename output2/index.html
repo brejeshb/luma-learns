@@ -27,13 +27,65 @@
         margin: 0;
         padding: 0;
       }
+
+
+
+      .goog-te-banner-frame.skiptranslate,
+      .VIpgJd-ZVi9od-ORHb-OEVmcd {
+        display: none !important;
+      }
+
       body {
+
         font-family: "Outfit", sans-serif;
         background-color: var(--bg-cream);
         color: var(--text-main);
         line-height: 1.6;
         overflow-x: hidden;
       }
+
+      /* ── Google Translate overrides ── */
+      /* Hide the top banner Google injects when translating */
+      .goog-te-banner-frame,
+      #goog-gt-tt,
+      .goog-te-balloon-frame {
+        display: none !important;
+      }
+      body {
+        top: 0 !important;
+      }
+      /* Style the select dropdown to match the app */
+      .goog-te-gadget-simple {
+        background: white !important;
+        border: 2px solid var(--lotus-pink) !important;
+        border-radius: 50px !important;
+        padding: 6px 12px !important;
+        font-family: "Outfit", sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        white-space: nowrap !important;
+      }
+      .goog-te-gadget-simple .goog-te-menu-value span {
+        color: var(--lotus-dark) !important;
+        font-family: "Outfit", sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        border: none !important;
+        text-decoration: none !important;
+      }
+      .goog-te-gadget-simple .goog-te-menu-value span:last-child {
+        color: var(--text-light) !important;
+        font-size: 0.75rem !important;
+      }
+      .goog-te-gadget-simple img {
+        display: none !important;
+      }
+      /* ── end Google Translate overrides ── */
 
       header {
         max-width: 900px;
@@ -70,6 +122,7 @@
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        align-items: center;
       }
       .stat-pill {
         background: white;
@@ -87,6 +140,11 @@
         color: var(--lotus-dark);
         border-color: var(--lotus-pink);
       }
+      /* Wrapper so the translate widget sits alongside the pills */
+      /* #google_translate_element {
+        display: flex;
+        align-items: center;
+      } */
 
       .quest-section {
         max-width: 900px;
@@ -238,6 +296,12 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+
+      .card-content h2,
+      .card-content p {
+        white-space: normal;    /* was nowrap — allow wrapping */
+        overflow-wrap: break-word;
+      }
       .card-progress {
         display: flex;
         flex-direction: column;
@@ -371,7 +435,6 @@
         font-weight: 800;
       }
 
-      /* Back face language rows */
       .lang-row {
         display: flex;
         align-items: center;
@@ -555,7 +618,6 @@
         color: white;
       }
 
-      /* Finish button — always active once quiz is revealed, retry always works */
       .btn-finish-lesson {
         background: var(--deep-green);
         color: white;
@@ -789,6 +851,19 @@
         <div class="stat-pill points">
           🪷 <span id="user-points">0</span> Flowers
         </div>
+        <!-- Google Translate widget renders here -->
+        <!-- <div id="google_translate_element"></div> -->
+
+<select id="lang-select" class="stat-pill points" onchange="doTranslate(this.value)"
+  style="cursor:pointer; font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:800; border:2px solid var(--lotus-pink); background:white; padding:8px 36px 8px 14px; border-radius:50px; color:var(--lotus-dark); appearance:none; -webkit-appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path d=%22M1 1l5 5 5-5%22 stroke=%22%23e05766%22 stroke-width=%222%22 fill=%22none%22 stroke-linecap=%22round%22/%></svg>'); background-repeat:no-repeat; background-position: right 14px center;">
+          <option value="">🌐 Language</option>
+          <option value="en">English</option>
+          <option value="si">Sinhala</option>
+          <option value="my">Burmese</option>
+          <option value="id">Indonesian</option>
+          <option value="ms">Malay</option>
+          <option value="tl">Filipino</option>
+        </select>
       </div>
     </header>
 
@@ -817,6 +892,53 @@
       <button class="dev-btn" onclick="resetAllData()">Reset Progress</button>
     </div> -->
 
+    <!-- Google Translate widget script -->
+    <!-- <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            // Prioritise languages most relevant to Singapore-based learners
+            // but the full list is still accessible via "More languages"
+            includedLanguages:
+              "en,si,my,id,ms,tl",
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false,
+          },
+          "google_translate_element"
+        );
+      }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script> -->
+    <div id="google_translate_element" style="display:none"></div>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          { pageLanguage: 'en', autoDisplay: false },
+          'google_translate_element'
+        );
+      }
+
+      function doTranslate(lang) {
+        if (!lang) return;
+        const tryTranslate = () => {
+          const select = document.querySelector('.goog-te-combo');
+          if (select) {
+            select.value = lang;
+            select.dispatchEvent(new Event('change'));
+          } else {
+            setTimeout(tryTranslate, 100);
+          }
+        };
+        tryTranslate();
+      }
+    </script>
+
+
+
+
+    </script>
     <script>
 const lessonsData = [
   {
@@ -867,7 +989,7 @@ const lessonsData = [
       },
       {
         en: "I am from (country)",
-        hk: "我是⋯⋯人 (Góa sī... kok-lâng)",
+        hk: "我是⋯⋯人 (Wa si... kok-lâng)",
         cn: "我是⋯⋯人",
         py: "wǒ shì... rén",
         audioHk: "tailoi_am_from_country.wav",
@@ -1057,7 +1179,7 @@ const lessonsData = [
       let currentCardIndex = {};
       let seenWords = {};
       let hasFlippedCurrent = {};
-      let quizAnswered = {}; // tracks if quiz was answered this open session (not blocking finish)
+      let quizAnswered = {};
 
       const canvas = document.getElementById("confetti-canvas");
       const ctx = canvas.getContext("2d");
@@ -1171,10 +1293,6 @@ const lessonsData = [
           const isNextInLine = index === categoriesCompleted;
           const isLocked =
             index > categoriesCompleted || (isNextInLine && finishedOneToday);
-
-          console.log(
-            `[DEV] Card ${lesson.id} — isCompleted:${isCompleted} isNextInLine:${isNextInLine} finishedOneToday:${finishedOneToday} isLocked:${isLocked}`,
-          );
 
           const w0 = lesson.words[0];
           grid.innerHTML += `
@@ -1296,7 +1414,6 @@ const lessonsData = [
         document.getElementById(`py-${lessonId}`).innerText = w.py;
         document.getElementById(`counter-${lessonId}`).innerText =
           `${currentCardIndex[lessonId] + 1} / ${lesson.words.length}`;
-        // Update audio buttons inline
         const back = document.querySelector(
           `#flashcard-${lessonId} .flashcard-face.back`,
         );
@@ -1344,36 +1461,27 @@ const lessonsData = [
       }
 
       function startQuiz(lessonId) {
-        // Disable card flipping and navigation
         const flashcard = document.getElementById(`flashcard-${lessonId}`);
         const flashcardScene = flashcard?.parentElement;
         if (flashcardScene) {
-          flashcardScene.style.pointerEvents = 'none'; // Prevent flipping
-          flashcardScene.style.opacity = '0.7'; // Visual hint it's disabled
+          flashcardScene.style.pointerEvents = 'none';
+          flashcardScene.style.opacity = '0.7';
         }
-        
-        // Disable navigation buttons
         const prevBtn = document.getElementById(`prev-${lessonId}`);
         const nextBtn = document.getElementById(`next-${lessonId}`);
         if (prevBtn) prevBtn.disabled = true;
         if (nextBtn) nextBtn.disabled = true;
-        
-        // Hide the hint
         const hint = document.getElementById(`hint-${lessonId}`);
         if (hint) hint.classList.remove('show');
-        
-        // Hide the gate and show quiz
         document.getElementById(`quiz-gate-${lessonId}`).classList.remove("show");
         document.getElementById(`quiz-${lessonId}`).classList.add("show");
-        
-        // Show finish button
         const finBtn = document.getElementById(`finish-${lessonId}`);
         finBtn.classList.add("show");
         finBtn.classList.remove("done");
       }
 
       function selectOption(lessonId, index) {
-        if (quizAnswered[lessonId] !== 0) return; // already answered, don't re-highlight
+        if (quizAnswered[lessonId] !== 0) return;
         const lesson = lessonsData.find((l) => l.id === lessonId);
         const isCorrect = index === lesson.quiz.a;
         document
@@ -1415,7 +1523,6 @@ const lessonsData = [
 
       function completeLesson(id, points, bonus) {
         completedThisSession.add(id);
-        // Dim the finish button so it's clear it's been used
         const finBtn = document.getElementById(`finish-${id}`);
         if (finBtn) {
           finBtn.classList.remove("show");
@@ -1460,12 +1567,10 @@ const lessonsData = [
         const finishedOneToday = lastCompletionDate === todayStr;
 
         if (finishedOneToday) {
-          // Show the lesson that was just completed today — quest is done for today
           const justDoneLesson = lessonsData[categoriesCompleted - 1];
           questDesc.innerText = `✅ ${justDoneLesson.title} & Daily Quiz`;
           document.getElementById("quest-reward-icon").innerText = "🏆";
         } else {
-          // Show the next lesson to complete
           const lesson = lessonsData[categoriesCompleted];
           questDesc.innerText = `${lesson.title} & Daily Quiz`;
           document.getElementById("quest-reward-icon").innerText = lesson.emoji;
@@ -1517,10 +1622,13 @@ const lessonsData = [
         location.reload();
       }
 
-      window.onload = () => {
+window.onload = () => {
+        const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
+        if (match) document.getElementById('lang-select').value = match[1];
         initApp();
         window.onresize = initConfetti;
       };
+      
     </script>
   </body>
 </html>
