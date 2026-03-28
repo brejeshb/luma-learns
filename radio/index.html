@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retro Radio</title>
+    <style>
+      :root {
+        --wood-dark: #3a2211;
+        --wood-med: #5c3a21;
+        --wood-light: #7a4f2f;
+        --metal-light: #e6d7c3;
+        --metal-med: #b39b7d;
+        --metal-dark: #8a7359;
+        --amber-glow: #ffb84d;
+        --amber-dim: #b37700;
+        --screen-bg: #1a1510;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: #2c2c2c;
+        background-image: radial-gradient(circle at 50% 50%, #3a3a3a, #111);
+        color: #fff;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      /* --- Radio Casing --- */
+      .radio-container {
+        background: linear-gradient(
+          135deg,
+          var(--wood-light),
+          var(--wood-dark)
+        );
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow:
+          10px 10px 30px rgba(0, 0, 0, 0.8),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.1),
+          inset -5px -5px 15px rgba(0, 0, 0, 0.6);
+        border: 2px solid #2a180a;
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+      }
+
+      /* Speaker Grills overlaying the wood */
+      .speaker-grill {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent 4px,
+          rgba(0, 0, 0, 0.3) 4px,
+          rgba(0, 0, 0, 0.3) 6px
+        );
+        pointer-events: none;
+        border-radius: 10px;
+      }
+
+      /* --- Display Screen --- */
+      .screen-bezel {
+        background: var(--metal-dark);
+        padding: 8px;
+        border-radius: 12px;
+        box-shadow:
+          inset 2px 2px 4px rgba(255, 255, 255, 0.2),
+          inset -2px -2px 4px rgba(0, 0, 0, 0.5),
+          0 4px 8px rgba(0, 0, 0, 0.5);
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .display-screen {
+        background-color: var(--screen-bg);
+        height: 70px;
+        border-radius: 6px;
+        box-shadow: inset 0 0 15px #000;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #0a0a0a;
+      }
+
+      .display-text {
+        font-family: "Courier New", Courier, monospace;
+        color: var(--amber-glow);
+        font-size: 0.95rem;
+        font-weight: bold;
+        text-shadow: 0 0 8px var(--amber-glow);
+        opacity: 0.5; /* Default state */
+        transition: opacity 1s ease-in-out;
+        text-align: center;
+        padding: 0 15px;
+        z-index: 2;
+        line-height: 1.2;
+      }
+
+      .display-text.active {
+        opacity: 1;
+      }
+
+      #static-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        opacity: 0;
+        transition: opacity 0.1s;
+        z-index: 1;
+      }
+
+      /* --- Controls Section --- */
+      .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        position: relative;
+        z-index: 2;
+        margin-bottom: 20px;
+      }
+
+      /* Brushed Metal Buttons */
+      .btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        background: radial-gradient(
+          circle at 30% 30%,
+          var(--metal-light),
+          var(--metal-dark)
+        );
+        box-shadow:
+          0 4px 6px rgba(0, 0, 0, 0.6),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.5),
+          inset -1px -1px 4px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        color: #333;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.1s,
+          box-shadow 0.1s;
+      }
+
+      .btn:active {
+        transform: translateY(2px);
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.6),
+          inset 2px 2px 5px rgba(0, 0, 0, 0.4);
+      }
+
+      /* --- Dial Knob --- */
+      .dial-wrapper {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: #2a180a;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Station Labels around the dial */
+      .ticks-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .tick {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        height: 8px;
+        background: var(--metal-med);
+        margin-left: -1px;
+        margin-top: -4px;
+        transform-origin: 50% 50%;
+      }
+
+      .tick-label {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--amber-glow);
+        font-size: 0.7rem;
+        font-family: "Courier New", Courier, monospace;
+        font-weight: bold;
+        text-shadow: 0 0 3px #000;
+        white-space: nowrap;
+      }
+
+      /* The Rotatable Knob */
+      .knob {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        /* Conic gradient creates the brushed circular metal look */
+        background: conic-gradient(
+          from 0deg,
+          var(--metal-med),
+          var(--metal-light),
+          var(--metal-med),
+          var(--metal-dark),
+          var(--metal-med)
+        );
+        box-shadow:
+          0 8px 15px rgba(0, 0, 0, 0.6),
+          inset 0 0 10px rgba(255, 255, 255, 0.3),
+          inset 0 0 20px rgba(0, 0, 0, 0.2);
+        border: 2px solid #5a4a35;
+        position: relative;
+        cursor: grab;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth rotation */
+      }
+
+      .knob:active {
+        cursor: grabbing;
+      }
+
+      .knob-indicator {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 25px;
+        background: #222;
+        border-radius: 3px;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+      }
+
+      /* --- Now Playing Card --- */
+      .now-playing-card {
+        margin-top: 30px;
+        background: #fdf6e3; /* Warm paper tone */
+        border-radius: 8px;
+        padding: 20px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        color: #333;
+        border: 1px solid #d4c5b0;
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease;
+      }
+
+      .now-playing-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .np-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #e0d3c1;
+        padding-bottom: 5px;
+      }
+
+      .np-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #8b5a2b;
+      }
+
+      .np-year {
+        font-size: 0.9rem;
+        color: #888;
+        font-weight: bold;
+      }
+
+      .np-subtitle {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #555;
+        font-style: italic;
+      }
+
+      /* Power Indicator */
+      .power-light {
+        position: absolute;
+        bottom: 25px;
+        right: 30px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #551100;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+        transition: all 0.3s;
+        z-index: 2;
+      }
+
+      .power-light.on {
+        background-color: #ff3300;
+        box-shadow:
+          0 0 10px #ff3300,
+          inset 0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="radio-container">
+      <div class="speaker-grill"></div>
+
+      <div class="screen-bezel">
+        <div class="display-screen">
+          <canvas id="static-canvas" width="64" height="32"></canvas>
+          <div class="display-text" id="display-text">OFF</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn" id="btn-prev" title="Previous Station">
+          &#9664;
+        </button>
+
+        <div class="dial-wrapper" id="dial-wrapper">
+          <div class="ticks-container" id="ticks-container"></div>
+          <div class="knob" id="knob">
+            <div class="knob-indicator"></div>
+          </div>
+        </div>
+
+        <button class="btn" id="btn-next" title="Next Station">&#9654;</button>
+      </div>
+
+      <div class="power-light" id="power-light"></div>
+    </div>
+
+    <div class="now-playing-card" id="now-playing">
+      <div class="np-header">
+        <div class="np-title" id="np-title">Tuning...</div>
+        <div class="np-year" id="np-year"></div>
+      </div>
+      <div class="np-subtitle" id="np-subtitle"></div>
+    </div>
+
+    <!-- Hidden audio element for playback -->
+    <audio id="station-audio" preload="none"></audio>
+
+    <script>
+      // --- Station Data ---
+      // Using reliable royalty-free music placeholders for the audio URLs to guarantee playback.
+      // The first station represents the Teresa Teng track as requested.
+      const stations = [
+        {
+          label: "FM 88 Rediffusion Era",
+          dialLabel: "FM 88",
+          title: "Prime Minister Swearing-In Broadcast",
+          year: "1990",
+          subtitle:
+            "Rediffusion radios were the main entertainment. You're listening to the swearing-in of Singapore's new Prime Minister Goh Chok Tong — similar to the kinds of national announcements families once heard through their Rediffusion sets.",
+          audioUrl:
+            "rediff.mp3",
+        },
+
+        {
+          label: "FM 88 Rediffusion Era",
+          dialLabel: "•",
+          title: "Getaran Jiwa – P. Ramlee",
+          year: "1960",
+          subtitle:
+            "P. Ramlee was the region's greatest entertainer — actor, director, composer all in one. Getaran Jiwa remains one of the most recognisable Malay melodies ever written.",
+          audioUrl: "getaran-jiwa.mp3",
+        },
+
+        {
+          label: "FM 91 Malay Folk songs",
+          dialLabel: "FM 91",
+          title: "Geylang Si Paku Geylang",
+          year: "Traditional",
+          subtitle:
+            "A folk song so woven into Singapore life that people of all races learnt it in school. Many elderly residents light up the moment they hear the opening notes.",
+          audioUrl: "geylang-si-paku-geylang.mp3",
+        },
+
+        {
+          label: "FM 91 Malay Folk songs",
+          dialLabel: "•",
+          title: "Chan Mali Chan",
+          year: "Traditional",
+          subtitle:
+            "A gentle playful folk song that crosses generations and communities. Simple enough to sing along to — and that's exactly the point.",
+          audioUrl: "chan-mali-chan.mp3",
+        },
+
+        {
+          label: "FM 94 1970s Chinese songs",
+          dialLabel: "FM 94",
+          title: "Moon Represents My Heart – Teresa Teng",
+          year: "1977",
+          subtitle:
+            "Teresa Teng's voice defined Mandopop for an entire generation across Asia. Many elderly residents can sing this entire song from memory.",
+          audioUrl: "moon-represents-my-heart.mp3",
+        },
+
+        {
+          label: "FM 94 1970s Chinese songs",
+          dialLabel: "•",
+          title: "Tian Mi Mi – Teresa Teng",
+          year: "1979",
+          subtitle:
+            "Another Teresa Teng classic that became deeply loved across Singapore and the region.",
+          audioUrl: "tian-mi-mi.mp3",
+        },
+
+        {
+          label: "FM 97 Songs Every Singaporean Knows",
+          dialLabel: "FM 97",
+          title: "Semoga Bahagia – Zubir Said",
+          year: "1961",
+          subtitle:
+            "Composed by the same man who wrote Singapore's national anthem. Generations of students sang this during Children's Day celebrations.",
+          audioUrl: "semoga-bahagia.mp3",
+        },
+
+        {
+          label: "FM 97 Songs Every Singaporean Knows",
+          dialLabel: "•",
+          title: "Di Tanjong Katong",
+          year: "1988",
+          subtitle:
+            "One of Singapore's oldest community songs revived during the Sing Singapore movement.",
+          audioUrl: "di-tanjong-katong.mp3",
+        },
+
+        {
+          label: "FM 100",
+          dialLabel: "FM 100",
+          title: "Stand Up for Singapore",
+          year: "1985",
+          subtitle:
+            "The very first National Day theme song — upbeat, optimistic and instantly recognisable.",
+          audioUrl: "stand-up-for-singapore.mp3",
+        },
+
+        {
+          label: "FM 100",
+          dialLabel: "•",
+          title: "Home – Kit Chan",
+          year: "1998",
+          subtitle:
+            "Possibly the most emotionally resonant NDP song ever written. 'Home' captures something Singaporeans feel but rarely say out loud.",
+          audioUrl: "home-kit-chan.mp3",
+        },
+      ];
+
+      // --- DOM Elements ---
+      const knob = document.getElementById("knob");
+      const ticksContainer = document.getElementById("ticks-container");
+      const displayText = document.getElementById("display-text");
+      const canvas = document.getElementById("static-canvas");
+      const ctx = canvas.getContext("2d");
+      const btnPrev = document.getElementById("btn-prev");
+      const btnNext = document.getElementById("btn-next");
+      const audioElement = document.getElementById("station-audio");
+      const powerLight = document.getElementById("power-light");
+      const npCard = document.getElementById("now-playing");
+      const npTitle = document.getElementById("np-title");
+      const npYear = document.getElementById("np-year");
+      const npSubtitle = document.getElementById("np-subtitle");
+
+      // --- State ---
+      let isPowerOn = false;
+      let currentStationIndex = 0;
+      let isTuning = false;
+      let tuneTimeoutId = null;
+      let canvasAnimId = null;
+
+      // --- Web Audio API (Static Noise) ---
+      let audioCtx = null;
+      let noiseSource = null;
+      let noiseGain = null;
+
+      function initAudioContext() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+      }
+
+      function playStaticSound() {
+        initAudioContext();
+        if (noiseSource) stopStaticSound(); // Clear existing
+
+        // Create a 2-second buffer of white noise
+        const bufferSize = audioCtx.sampleRate * 2;
+        const buffer = audioCtx.createBuffer(
+          1,
+          bufferSize,
+          audioCtx.sampleRate,
+        );
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        noiseSource = audioCtx.createBufferSource();
+        noiseSource.buffer = buffer;
+        noiseSource.loop = true;
+
+        // Filter to make it sound like an old radio band (warm static)
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.value = 1500;
+        filter.Q.value = 0.5;
+
+        // Volume control
+        noiseGain = audioCtx.createGain();
+        noiseGain.gain.value = 0.15;
+
+        noiseSource.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+
+        noiseSource.start();
+      }
+
+      function stopStaticSound() {
+        if (noiseSource) {
+          noiseSource.stop();
+          noiseSource.disconnect();
+          noiseSource = null;
+        }
+      }
+
+      // --- Visual Static (Canvas) ---
+      function startVisualStatic() {
+        canvas.style.opacity = "1";
+        const w = canvas.width;
+        const h = canvas.height;
+        const imgData = ctx.createImageData(w, h);
+        const data = imgData.data;
+
+        function draw() {
+          if (!isTuning) return;
+          for (let i = 0; i < data.length; i += 4) {
+            // Amber-tinted noise
+            const val = Math.random() * 255;
+            data[i] = val; // R
+            data[i + 1] = val * 0.7; // G (lower for amber)
+            data[i + 2] = 0; // B
+            data[i + 3] = 255; // Alpha
+          }
+          ctx.putImageData(imgData, 0, 0);
+          canvasAnimId = requestAnimationFrame(draw);
+        }
+        draw();
+      }
+
+      function stopVisualStatic() {
+        canvas.style.opacity = "0";
+        if (canvasAnimId) {
+          cancelAnimationFrame(canvasAnimId);
+          canvasAnimId = null;
+        }
+      }
+
+      // --- Initialization ---
+      function drawTicks() {
+        const radius = 65; // Distance from center
+        const total = stations.length;
+
+        stations.forEach((station, i) => {
+          const deg = i * (360 / total);
+
+          const tick = document.createElement("div");
+          tick.className = "tick";
+
+          // Position ticks in a circle around the edge of the wrapper
+          tick.style.transform = `rotate(${deg}deg) translateY(-${radius}px)`;
+
+          // Add labels that stay upright
+          const label = document.createElement("div");
+          label.className = "tick-label";
+          label.textContent = station.dialLabel || station.label;
+          label.style.transform = `translateX(-50%) rotate(-${deg}deg)`;
+
+          tick.appendChild(label);
+          ticksContainer.appendChild(tick);
+        });
+      }
+
+      // --- Core Logic ---
+      function updateKnobRotation() {
+        const total = stations.length;
+        const deg = currentStationIndex * (360 / total);
+        knob.style.transform = `rotate(${deg}deg)`;
+      }
+
+      function updateNowPlaying() {
+        const station = stations[currentStationIndex];
+        npTitle.textContent = station.title;
+        npYear.textContent = station.year;
+        npSubtitle.textContent = station.subtitle;
+        npCard.classList.add("visible");
+      }
+
+      function tuneToStation(direction = 0) {
+        // Power on if first interaction
+        if (!isPowerOn) {
+          isPowerOn = true;
+          powerLight.classList.add("on");
+        }
+
+        // Calculate new index
+        if (direction !== 0) {
+          currentStationIndex =
+            (currentStationIndex + direction + stations.length) %
+            stations.length;
+        }
+
+        updateKnobRotation();
+
+        // Start Tuning sequence
+        isTuning = true;
+        npCard.classList.remove("visible"); // Hide card
+        displayText.classList.remove("active"); // Fade out text
+        audioElement.pause(); // Stop previous audio
+
+        // Debounce tuning if rapidly clicking
+        clearTimeout(tuneTimeoutId);
+
+        // Start visual and audio static
+        startVisualStatic();
+        playStaticSound();
+
+        // After tuning period (800ms), lock onto station
+        tuneTimeoutId = setTimeout(() => {
+          finishTuning();
+        }, 800);
+      }
+
+      function finishTuning() {
+        isTuning = false;
+        stopStaticSound();
+        stopVisualStatic();
+
+        const station = stations[currentStationIndex];
+
+        // Update and fade in text
+        displayText.textContent = station.label;
+        displayText.classList.add("active");
+
+        // Play audio
+        audioElement.src = station.audioUrl;
+        audioElement
+          .play()
+          .catch((e) =>
+            console.log("Audio play blocked pending user interaction:", e),
+          );
+
+        // Update info card
+        updateNowPlaying();
+      }
+
+      // --- Event Listeners ---
+      btnPrev.addEventListener("click", () => tuneToStation(-1));
+      btnNext.addEventListener("click", () => tuneToStation(1));
+
+      // Allow clicking the knob directly to switch
+      knob.addEventListener("click", (e) => {
+        const rect = knob.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        // Click right half -> next, left half -> prev
+        if (x > rect.width / 2) {
+          tuneToStation(1);
+        } else {
+          tuneToStation(-1);
+        }
+      });
+
+      // Initialize layout
+      drawTicks();
+    </script>
+  </body>
+</html>
