@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Singapore Festivities Calendar</title>
+    <!-- Importing playful/elegant fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Quicksand:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --hot-pink: #ff6b81;
+        --soft-pink: #ffb7c5;
+        --deep-mint: #2d6a4f;
+        --mint-green: #b2d8d8;
+        --water-blue: #e0f7fa;
+        --gold: #ffd700;
+        --white: #ffffff;
+        --official-color: #ff8c42; /* Warm Coral/Orange for Official */
+        --unofficial-color: #4895ef; /* Bright Blue for Unofficial */
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: linear-gradient(180deg, #fff5f7 0%, var(--mint-green) 100%);
+        color: #333;
+        font-family: "Quicksand", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden;
+        padding-bottom: 150px; /* Space for the pond */
+      }
+
+      /* --- Header Section --- */
+      header {
+        text-align: center;
+        padding: 40px 20px;
+        z-index: 10;
+      }
+
+      h1 {
+        font-family: "Cherry Bomb One", cursive;
+        color: var(--hot-pink);
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        margin-bottom: 5px;
+        text-shadow:
+          3px 3px 0px var(--white),
+          6px 6px 0px rgba(0, 0, 0, 0.05);
+        letter-spacing: 2px;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: var(--deep-mint);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
+
+      /* --- Timeline (The Navigation) --- */
+      .timeline-container {
+        width: 90%;
+        max-width: 1100px;
+        margin: 20px auto;
+        position: relative;
+        z-index: 10;
+      }
+
+      .timeline-wrapper {
+        display: flex;
+        overflow-x: auto;
+        padding: 20px 10px 50px 10px;
+        gap: 15px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .timeline-wrapper::-webkit-scrollbar {
+        display: none;
+      }
+
+      .month-btn {
+        flex: 0 0 auto;
+        background: var(--white);
+        border: 4px solid var(--soft-pink);
+        border-radius: 50px;
+        padding: 12px 25px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: "Cherry Bomb One", cursive;
+        color: var(--hot-pink);
+        font-size: 1.1rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .month-btn:hover {
+        transform: translateY(-5px);
+        background: var(--soft-pink);
+        color: white;
+      }
+
+      .month-btn.active {
+        background: var(--hot-pink);
+        color: white;
+        border-color: var(--white);
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 10px 20px rgba(255, 107, 129, 0.4);
+      }
+
+      /* --- Content Area (The Poster) --- */
+      .poster-card {
+        width: 90%;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: 8px solid var(--white);
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 5;
+        min-height: 400px;
+        margin-bottom: 50px;
+      }
+
+      .holiday-group {
+        animation: slideUp 0.6s ease-out forwards;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .holiday-entry {
+        margin-bottom: 50px;
+        position: relative;
+        text-align: center;
+      }
+
+      .holiday-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: white;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+      }
+
+      .badge-official {
+        background-color: var(--official-color);
+      }
+      .badge-unofficial {
+        background-color: var(--unofficial-color);
+      }
+
+      .holiday-title {
+        font-family: "Cherry Bomb One", cursive;
+        color: var(--deep-mint);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .event-image-container {
+        width: 100%;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+        background-color: #f0f0f0;
+        border: 4px solid var(--white);
+      }
+
+      .event-image {
+        width: 100%;
+        height: auto;
+        max-height: 450px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .image-caption {
+        font-size: 1.1rem;
+        color: #555;
+        line-height: 1.5;
+        font-style: italic;
+        padding: 0 10px;
+      }
+
+      /* --- Decorative Pond & Grass --- */
+      .pond-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 180px;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .grass {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(to top, #2d6a4f, #52b788);
+        clip-path: polygon(
+          0% 100%,
+          5% 70%,
+          10% 90%,
+          15% 65%,
+          20% 85%,
+          25% 60%,
+          30% 95%,
+          35% 70%,
+          40% 88%,
+          45% 62%,
+          50% 92%,
+          55% 68%,
+          60% 85%,
+          65% 60%,
+          70% 95%,
+          75% 72%,
+          80% 88%,
+          85% 65%,
+          90% 92%,
+          95% 70%,
+          100% 100%
+        );
+        opacity: 0.8;
+      }
+
+      .water {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 60px;
+        background: var(--water-blue);
+        opacity: 0.6;
+        border-top: 4px solid #b2ebf2;
+      }
+
+      .lily-pad {
+        position: absolute;
+        background: #40916c;
+        border-radius: 50%;
+        bottom: 20px;
+        width: 80px;
+        height: 30px;
+        clip-path: polygon(
+          0% 50%,
+          100% 50%,
+          100% 100%,
+          0% 100%,
+          0% 50%,
+          10% 40%,
+          45% 45%,
+          50% 0%,
+          55% 45%,
+          90% 40%,
+          100% 50%
+        );
+        transform: scaleX(1.5);
+        animation: float 4s ease-in-out infinite;
+      }
+
+      .lotus-flower {
+        position: absolute;
+        bottom: 35px;
+        font-size: 2.5rem;
+        animation: sway 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateX(0) scaleX(1.5);
+        }
+        50% {
+          transform: translateX(10px) scaleX(1.5);
+        }
+      }
+
+      @keyframes sway {
+        0%,
+        100% {
+          transform: rotate(-5deg);
+        }
+        50% {
+          transform: rotate(5deg);
+        }
+      }
+
+      /* --- Floating Petals --- */
+      .petal {
+        position: fixed;
+        top: -10%;
+        color: var(--soft-pink);
+        font-size: 1.5rem;
+        z-index: 0;
+        user-select: none;
+        pointer-events: none;
+        animation: fall linear infinite;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(360deg);
+        }
+      }
+
+      /* --- Mobile Responsiveness --- */
+      @media (max-width: 600px) {
+        .poster-card {
+          padding: 20px;
+          border-width: 4px;
+        }
+        .holiday-title {
+          font-size: 1.6rem;
+        }
+        .pond-container {
+          height: 120px;
+        }
+        .image-caption {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Drifting Petals -->
+    <script>
+      for (let i = 0; i < 15; i++) {
+        const petal = document.createElement("div");
+        petal.className = "petal";
+        petal.innerHTML = "🌸";
+        petal.style.left = Math.random() * 100 + "vw";
+        petal.style.animationDuration = Math.random() * 10 + 5 + "s";
+        petal.style.opacity = Math.random();
+        petal.style.fontSize = Math.random() * 20 + 10 + "px";
+        document.body.appendChild(petal);
+      }
+    </script>
+
+    <header>
+      <h1>Singapore</h1>
+      <p class="subtitle">Festivity Calendar</p>
+    </header>
+
+    <div class="timeline-container">
+      <div class="timeline-wrapper" id="monthBar">
+        <!-- JS Populates this -->
+      </div>
+    </div>
+
+    <div class="poster-card" id="displayArea">
+      <div style="text-align: center; margin-top: 80px">
+        <p
+          style="
+            font-size: 1.5rem;
+            color: var(--hot-pink);
+            font-family: &quot;Cherry Bomb One&quot;;
+          "
+        >
+          Pick a month above to see the magic!
+        </p>
+        <p style="color: var(--deep-mint)">Let's celebrate together.</p>
+      </div>
+    </div>
+
+    <!-- Decorative Pond Elements -->
+    <div class="pond-container">
+      <div class="grass"></div>
+      <div class="water"></div>
+      <!-- Lily Pads -->
+      <div class="lily-pad" style="left: 10%; bottom: 15px"></div>
+      <div class="lotus-flower" style="left: 15%; bottom: 30px">🪷</div>
+
+      <div class="lily-pad" style="left: 60%; bottom: 10px"></div>
+      <div class="lotus-flower" style="left: 65%; bottom: 25px">🪷</div>
+
+      <div class="lily-pad" style="left: 85%; bottom: 20px"></div>
+      <div class="lotus-flower" style="left: 88%; bottom: 35px">🪷</div>
+    </div>
+
+    <script>
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+
+      const calendar = {
+        0: [
+          {
+            name: "New Year’s Day",
+            status: "Official",
+            img: "https://static.vecteezy.com/system/resources/previews/026/799/321/non_2x/drawing-of-calendar-of-jan-1st-isolated-on-transparent-background-for-usage-as-an-illustration-and-a-decorative-element-png.png",
+            caption: "New Year’s Day",
+          },
+          {
+            name: "New Year’s Eve",
+            status: "Unofficial",
+            img: "https://ik.imgkit.net/3vlqs5axxjf/TW-Asia/uploadedImages/Industry/Attractions/AdobeStock_165639371.jpg?tr=w-1200%2Cfo-auto",
+            caption: "Fireworks over city skyline (e.g., Marina Bay countdown)",
+          },
+        ],
+        1: [
+          {
+            name: "Chinese New Year",
+            status: "Official",
+            img: "https://i.ytimg.com/vi/8aSI5umifro/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLArh8MeAQI8FuOHTkHfLo78CY6YFQ",
+            caption:
+              "Check out some of the festivities. Lion dance troupes and decorations",
+          },
+          {
+            name: "Chingay Parade",
+            status: "Unofficial",
+            img: "https://images.rove.me/w_1920,q_85/a8lyezkhqmlosijiaute/singapore-the-chingay-parade-chinese-new-year.jpg",
+            caption:
+              "Chingay is a street parade during the chinese new year parade",
+          },
+          {
+            name: "Thaipusam",
+            status: "Unofficial",
+            img: "https://static.mothership.sg/1/2023/02/singapore-thaipusam-2023.jpg",
+            caption:
+              "Thaipusam is a hindu procession where devotees walk from Sri Srinivasa Perumal Temple to Sri Thendayuthapani Temple.",
+          },
+        ],
+        2: [
+          {
+            name: "Hari Raya Puasa",
+            status: "Official",
+            img: "https://media.timeout.com/images/106257278/750/562/image.jpg",
+            caption:
+              "Hari raya puasa marks the end of the fasting month of Ramadan",
+          },
+        ],
+        3: [
+          {
+            name: "Good Friday",
+            status: "Official",
+            img: "https://thelongnwindingroad.wordpress.com/wp-content/uploads/2016/03/jeromelim-3703.jpg",
+            caption:
+              "A day of religious observance for Christians, commemorating the crucifixion of Jesus Christ. Also a long weekend",
+          },
+          {
+            name: "Easter",
+            status: "Unofficial",
+            img: "https://offloadmedia.feverup.com/secretsingapore.co/wp-content/uploads/2025/04/07225622/best-Easter-2025-events-Singapore-1024x683.jpg",
+            caption: "Easters happens 3 day after Jesus's crucifixion",
+          },
+        ],
+        4: [
+          {
+            name: "Labour Day",
+            status: "Official",
+            img: "https://www.scba.org.sg/TinyFileManager/resources/files/243///labour%20day%202024.jpg",
+            caption:
+              "We honour worker contributions. Look forward to family-friendly activities like the May Day Family Fiesta",
+          },
+          {
+            name: "Vesak Day",
+            status: "Official",
+            img: "https://thesmartlocal.com/wp-content/uploads/2023/06/vesak-day-singapore-Bright-Hill-Temple.png",
+            caption:
+              "A day commemorating buddha birth and passing. On this days, some buddhists adopt vegetarian diet.",
+          },
+        ],
+        5: [
+          {
+            name: "Dragon Boat Festival",
+            status: "Unofficial",
+            img: "https://www.visitsingapore.com/content/dam/visitsingapore/whats-happening/festivals/dragon-boat-festival/DYK_dragonboat.jpg",
+            caption:
+              "Dig into delicious dumplings and enjoy exhilarating Dragon Boat races at this traditional Chinese festival",
+          },
+          {
+            name: "Hari Raya Haji",
+            status: "Official",
+            img: "https://dam.mediacorp.sg/image/upload/s--Eei6Ys0c--/c_fill,g_auto,h_676,w_1200/f_auto,q_auto/v1/tdy-migration/20211021_hari_raya_raj.jpg?itok=FsLuJfHz",
+            caption:
+              "Muslims in Singapore remember their faith with prayer and reflection during Hari Raya Haji, also known as the Festival of Sacrifice.",
+          },
+        ],
+        // 6: [
+        //     {
+        //         name: "Mid-Year Calm",
+        //         status: "Neutral",
+        //         img: "https://ik.imgkit.net/3vlqs5axxjf/TW-Asia/uploadedImages/Industry/Attractions/AdobeStock_165639371.jpg?tr=w-1200%2Cfo-auto",
+        //         caption: "Tropical greenery or Singapore skyline vibes"
+        //     }
+        // ],
+        7: [
+          {
+            name: "National Day",
+            status: "Official",
+            img: "https://vac3.sgp1.digitaloceanspaces.com/wp-content/uploads/2023/03/15144722/singapore-national-day-parade-91dcce52-6102-4398-8832-dab69efb8c3-resize-750-e1678862865349.jpeg",
+            caption:
+              "Its national day, Singapore’s birthday. Expect to wear red and white",
+          },
+        ],
+        8: [
+          {
+            name: "Mid Autumn Festival",
+            status: "Unofficial",
+            img: "https://i.ytimg.com/vi/wuL1VFN_fXg/maxresdefault.jpg",
+            caption:
+              "Celebrate Singapore's Mid-Autumn Festival 2026 with lantern light-ups, mooncakes, cultural activities & traditions in Chinatown and Gardens by the Bay.",
+          },
+        ],
+        // 9: [
+        //     {
+        //         name: "Pre-Festival Season",
+        //         status: "Neutral",
+        //         img: "https://www.visitsingapore.com/content/dam/visitsingapore/whats-happening/festivals/deepavali/deepavali-street-light-up_746x558.jpg",
+        //         caption: "Little India getting ready with street light-ups"
+        //     }
+        // ],
+        10: [
+          {
+            name: "Deepavali 2026",
+            status: "Official",
+            img: "https://www.visitsingapore.com/content/dam/visitsingapore/whats-happening/festivals/deepavali/deepavali-street-light-up_746x558.jpg",
+            caption:
+              "The annual Hindu celebration of the triumph of light over darkness. bazaars, street light-ups, cultural performances",
+          },
+        ],
+        11: [
+          {
+            name: "Christmas Day",
+            status: "Official",
+            img: "https://offloadmedia.feverup.com/secretsingapore.co/wp-content/uploads/2025/10/12213441/countdown-to-Christmas-2025-Singapore-best-events-1024x683.jpg",
+            caption: "See the christmas Orchard Road lights",
+          },
+          {
+            name: "New Year’s Eve",
+            status: "Unofficial",
+            img: "https://ik.imgkit.net/3vlqs5axxjf/TW-Asia/uploadedImages/Industry/Attractions/AdobeStock_165639371.jpg?tr=w-1200%2Cfo-auto",
+            caption: "Fireworks at most community centres and Marina bay",
+          },
+        ],
+      };
+
+      const monthBar = document.getElementById("monthBar");
+      const displayArea = document.getElementById("displayArea");
+
+      function renderMonth(index) {
+        const holidays = calendar[index] || [];
+        const mName = months[index];
+
+        let html = `<div class="holiday-group">
+                <h2 style="font-family: 'Cherry Bomb One'; color: var(--hot-pink); font-size: 2.5rem; margin-bottom: 25px; border-bottom: 2px dashed var(--soft-pink); padding-bottom: 10px; text-align: center;">
+                    ${mName}
+                </h2>`;
+
+        if (holidays.length === 0) {
+          html += `<p style="text-align: center; padding-top: 50px;">Enjoy the calm of ${mName}!</p>`;
+        } else {
+          holidays.forEach((h) => {
+            const badgeClass =
+              h.status === "Official" ? "badge-official" : "badge-unofficial";
+            html += `
+                    <div class="holiday-entry">
+                        <span class="holiday-badge ${badgeClass}">${h.status}</span>
+                        <div class="holiday-title">${h.name}</div>
+                        <div class="event-image-container">
+                            <img class="event-image" src="${h.img}" alt="${h.name}" onerror="this.src='https://via.placeholder.com/800x450?text=Singapore+Festivity'">
+                        </div>
+                        <div class="image-caption">${h.caption}</div>
+                    </div>`;
+          });
+        }
+        html += `</div>`;
+        displayArea.innerHTML = html;
+      }
+
+      months.forEach((m, i) => {
+        const btn = document.createElement("button");
+        btn.className = "month-btn";
+        btn.innerText = m;
+        btn.onclick = () => {
+          document
+            .querySelectorAll(".month-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderMonth(i);
+          btn.scrollIntoView({ behavior: "smooth", inline: "center" });
+        };
+        monthBar.appendChild(btn);
+      });
+    </script>
+  </body>
+</html>
